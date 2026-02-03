@@ -1,0 +1,70 @@
+name: Download XML Components
+
+on:
+  workflow_dispatch: # Allows you to run this manually from the Actions tab
+  push:
+    paths:
+      - 'data/*.xml' # Triggers automatically when you update an XML in the data folder
+
+jobs:
+  download-and-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Essential for the bot to push files back to your repo
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: sudo apt-get install -y xmlstarlet
+
+      - name: Parse and Download Components
+        run: |
+          # Define the directory for downloads
+          DEST_DIR="downloaded-components"
+          mkdir -p "$DEST_DIR"
+          
+          # Change this to the actual path of your XML file
+          XML_FILE="data/links.xml"
+
+          if [ ! -f "$XML_FILE" ]; then
+            echo "Error: $XML_FILE not found!"
+            exit 1
+          fi
+
+          # 1. Use xmlstarlet to find <string name="filename">URL</string>
+          # 2. Extract as "name|url" pairs
+          # 3. Loop through each pair
+          xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, '|', .)" -n "$XML_FILE" | while IFS='|' read -r FILENAME URL; do
+            
+            # Clean whitespace and validate it's an HTTP link
+            URL=$(echo "$URL" | xargs)
+            if [[ "$URL" =~ ^https?:// ]]; then
+              
+              TARGET_PATH="$DEST_DIR/$FILENAME"
+              
+              # Only download if the file doesn't already exist to save bandwidth
+              if [ ! -f "$TARGET_PATH" ]; then
+                echo "Downloading $FILENAME from $URL..."
+                curl -L -s -o "$TARGET_PATH" "$URL"
+              else
+                echo "Skipping $FILENAME, already exists."
+              fi
+            fi
+          done
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add downloaded-components/
+          
+          # Check if there are changes to commit to prevent workflow failure
+          if git diff --staged --quiet; then
+            echo "No new components to add."
+          else
+            git commit -m "Automated update: Downloaded components from XML"
+            git push
+          fi
