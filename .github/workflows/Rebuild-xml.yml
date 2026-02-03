@@ -1,13 +1,13 @@
-name: Generate Clean XML
+name: Generate Clean Component Lists
 
 on:
-  workflow_dispatch: # Allows you to run this manually
+  workflow_dispatch:
   push:
     paths:
       - 'sp_winemu_all_components12.xml'
 
 jobs:
-  rebuild-xml:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -19,43 +19,52 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get install -y xmlstarlet
 
-      - name: Create Clean XML
+      - name: Extract Data and Rebuild Files
         run: |
-          INPUT_FILE="sp_winemu_all_components12.xml"
-          OUTPUT_FILE="clean_components.xml"
+          INPUT="sp_winemu_all_components12.xml"
+          XML_OUT="clean_links.xml"
+          TXT_OUT="component_list.txt"
 
-          # Start the new XML structure
-          echo '<?xml version="1.0" encoding="utf-8"?>' > "$OUTPUT_FILE"
-          echo '<components>' >> "$OUTPUT_FILE"
+          # 1. Initialize the XML File
+          echo '<?xml version="1.0" encoding="utf-8"?>' > "$XML_OUT"
+          echo '<map>' >> "$XML_OUT"
 
-          # Parse the complex XML
-          # We use ||| as a delimiter to handle the JSON spaces safely
-          xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, '|||', .)" -n "$INPUT_FILE" | while IFS='|||' read -r FILENAME JSON_CONTENT; do
+          # 2. Initialize the Text Document
+          echo "WINEMU COMPONENT DOWNLOAD LIST" > "$TXT_OUT"
+          echo "Generated on: $(date)" >> "$TXT_OUT"
+          echo "------------------------------------------------" >> "$TXT_OUT"
+          echo "" >> "$TXT_OUT"
+
+          # 3. Process the "dirty" XML
+          xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, '|||', .)" -n "$INPUT" | while IFS='|||' read -r FILENAME JSON; do
             
             if [ -z "$FILENAME" ]; then continue; fi
 
-            # Extract the URL from the JSON string
-            URL=$(echo "$JSON_CONTENT" | grep -oP '(?<="download_url":")[^"]*' | head -1 | sed 's/\\//g')
+            # Extract the URL from inside the JSON string and clean slashes
+            URL=$(echo "$JSON" | grep -oP '(?<="download_url":")[^"]*' | head -1 | sed 's/\\//g')
 
             if [[ "$URL" =~ ^https?:// ]]; then
-              echo "  <component>" >> "$OUTPUT_FILE"
-              echo "    <name>$FILENAME</name>" >> "$OUTPUT_FILE"
-              echo "    <url>$URL</url>" >> "$OUTPUT_FILE"
-              echo "  </component>" >> "$OUTPUT_FILE"
+               # Add to Clean XML
+               echo "    <string name=\"$FILENAME\">$URL</string>" >> "$XML_OUT"
+               
+               # Add to Text Document
+               echo "$FILENAME:" >> "$TXT_OUT"
+               echo "$URL" >> "$TXT_OUT"
+               echo "" >> "$TXT_OUT"
             fi
           done
 
-          echo '</components>' >> "$OUTPUT_FILE"
+          echo '</map>' >> "$XML_OUT"
 
-      - name: Commit and Push Clean XML
+      - name: Commit Updated Files
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add clean_components.xml
+          git add clean_links.xml component_list.txt
           
           if git diff --staged --quiet; then
-            echo "No changes to the clean XML."
+            echo "No changes to components."
           else
-            git commit -m "Generate clean_components.xml"
+            git commit -m "Automated: Refreshed link lists (XML and TXT)"
             git push
           fi
