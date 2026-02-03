@@ -1,16 +1,16 @@
 name: Download XML Components
 
 on:
-  workflow_dispatch: # Allows you to run this manually from the Actions tab
+  workflow_dispatch:
   push:
     paths:
-      - 'data/*.xml' # Triggers automatically when you update an XML in the data folder
+      - 'sp_winemu_all_components12.xml' # Trigger when this specific file changes
 
 jobs:
   download-and-commit:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Essential for the bot to push files back to your repo
+      contents: write
 
     steps:
       - name: Checkout Repository
@@ -21,30 +21,26 @@ jobs:
 
       - name: Parse and Download Components
         run: |
-          # Define the directory for downloads
           DEST_DIR="downloaded-components"
           mkdir -p "$DEST_DIR"
           
-          # Change this to the actual path of your XML file
-          XML_FILE="data/links.xml"
+          # Updated to your specific filename
+          XML_FILE="sp_winemu_all_components12.xml"
 
           if [ ! -f "$XML_FILE" ]; then
-            echo "Error: $XML_FILE not found!"
+            echo "Error: $XML_FILE not found in the root directory!"
             exit 1
           fi
 
-          # 1. Use xmlstarlet to find <string name="filename">URL</string>
-          # 2. Extract as "name|url" pairs
-          # 3. Loop through each pair
+          # Extract filename from 'name' attribute and link from tag content
           xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, '|', .)" -n "$XML_FILE" | while IFS='|' read -r FILENAME URL; do
             
-            # Clean whitespace and validate it's an HTTP link
+            # Clean whitespace
             URL=$(echo "$URL" | xargs)
+            
             if [[ "$URL" =~ ^https?:// ]]; then
-              
               TARGET_PATH="$DEST_DIR/$FILENAME"
               
-              # Only download if the file doesn't already exist to save bandwidth
               if [ ! -f "$TARGET_PATH" ]; then
                 echo "Downloading $FILENAME from $URL..."
                 curl -L -s -o "$TARGET_PATH" "$URL"
@@ -61,10 +57,9 @@ jobs:
           
           git add downloaded-components/
           
-          # Check if there are changes to commit to prevent workflow failure
           if git diff --staged --quiet; then
             echo "No new components to add."
           else
-            git commit -m "Automated update: Downloaded components from XML"
+            git commit -m "Update components from sp_winemu_all_components12.xml"
             git push
           fi
