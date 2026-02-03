@@ -1,0 +1,61 @@
+name: Generate Clean XML
+
+on:
+  workflow_dispatch: # Allows you to run this manually
+  push:
+    paths:
+      - 'sp_winemu_all_components12.xml'
+
+jobs:
+  rebuild-xml:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: sudo apt-get install -y xmlstarlet
+
+      - name: Create Clean XML
+        run: |
+          INPUT_FILE="sp_winemu_all_components12.xml"
+          OUTPUT_FILE="clean_components.xml"
+
+          # Start the new XML structure
+          echo '<?xml version="1.0" encoding="utf-8"?>' > "$OUTPUT_FILE"
+          echo '<components>' >> "$OUTPUT_FILE"
+
+          # Parse the complex XML
+          # We use ||| as a delimiter to handle the JSON spaces safely
+          xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, '|||', .)" -n "$INPUT_FILE" | while IFS='|||' read -r FILENAME JSON_CONTENT; do
+            
+            if [ -z "$FILENAME" ]; then continue; fi
+
+            # Extract the URL from the JSON string
+            URL=$(echo "$JSON_CONTENT" | grep -oP '(?<="download_url":")[^"]*' | head -1 | sed 's/\\//g')
+
+            if [[ "$URL" =~ ^https?:// ]]; then
+              echo "  <component>" >> "$OUTPUT_FILE"
+              echo "    <name>$FILENAME</name>" >> "$OUTPUT_FILE"
+              echo "    <url>$URL</url>" >> "$OUTPUT_FILE"
+              echo "  </component>" >> "$OUTPUT_FILE"
+            fi
+          done
+
+          echo '</components>' >> "$OUTPUT_FILE"
+
+      - name: Commit and Push Clean XML
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add clean_components.xml
+          
+          if git diff --staged --quiet; then
+            echo "No changes to the clean XML."
+          else
+            git commit -m "Generate clean_components.xml"
+            git push
+          fi
