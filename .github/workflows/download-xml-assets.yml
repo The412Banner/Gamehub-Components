@@ -16,41 +16,40 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          lfs: true # Enable LFS
+          lfs: true
 
       - name: Install Dependencies
         run: |
           sudo apt-get install -y xmlstarlet git-lfs
           git lfs install
 
-      - name: Configure Git LFS
-        run: |
-          # Track all files in the download folder with LFS
-          mkdir -p downloaded-components
-          git lfs track "downloaded-components/*"
-          git add .gitattributes
-
       - name: Parse and Download Components
         run: |
           DEST_DIR="downloaded-components"
+          mkdir -p "$DEST_DIR"
           XML_FILE="sp_winemu_all_components12.xml"
 
-          xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, ' ', .)" -n "$XML_FILE" | while read -r FILENAME JSON_CONTENT; do
+          # Use a more memory-efficient way to extract data
+          # This pulls the name and the raw tag content line by line
+          xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, '|||', .)" -n "$XML_FILE" | while IFS='|||' read -r FILENAME JSON_CONTENT; do
             
-            # Extract URL from the download_url field
-            URL=$(echo "$JSON_CONTENT" | grep -oP '(?<="download_url":")[^"]*')
+            if [ -z "$FILENAME" ]; then continue; fi
+
+            # Extract the URL using a non-greedy regex
+            URL=$(echo "$JSON_CONTENT" | grep -oP '(?<="download_url":")[^"]*' | head -1)
             
-            if [[ "$URL" =~ ^https?:// ]]; then
-              # Clean escaped slashes
-              URL=$(echo "$URL" | sed 's/\\//g')
+            # Clean the URL (remove backslashes)
+            CLEAN_URL=$(echo "$URL" | sed 's/\\//g')
+
+            if [[ "$CLEAN_URL" =~ ^https?:// ]]; then
               TARGET_PATH="$DEST_DIR/$FILENAME"
               
               if [ ! -f "$TARGET_PATH" ]; then
-                echo "Downloading $FILENAME..."
-                # Use -C - to allow resuming if a download is interrupted
-                curl -L -s -C - -o "$TARGET_PATH" "$URL"
+                echo "Downloading: $FILENAME"
+                # -f makes curl fail silently on server errors, -sS shows errors only if it fails
+                curl -L -f -sS -o "$TARGET_PATH" "$CLEAN_URL"
               else
-                echo "Skipping $FILENAME, already exists."
+                echo "Skipping: $FILENAME (already exists)"
               fi
             fi
           done
@@ -60,12 +59,15 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
+          # Initialize LFS for the folder
+          git lfs track "downloaded-components/*"
           git add .gitattributes
+          
           git add downloaded-components/
           
           if git diff --staged --quiet; then
-            echo "No new components to add."
+            echo "No changes to commit."
           else
-            git commit -m "Update components using Git LFS"
+            git commit -m "Sync components from XML"
             git push
           fi
