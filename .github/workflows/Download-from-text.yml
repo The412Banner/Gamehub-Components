@@ -1,0 +1,68 @@
+name: Download Components from List
+
+on:
+  workflow_dispatch: # Manual trigger
+  push:
+    paths:
+      - 'component_list.txt' # Runs automatically when the text list is updated
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Download Files
+        run: |
+          LIST_FILE="component_list.txt"
+          DEST_DIR="downloaded-components"
+          mkdir -p "$DEST_DIR"
+
+          if [ ! -f "$LIST_FILE" ]; then
+            echo "Error: $LIST_FILE not found!"
+            exit 1
+          fi
+
+          # Loop through the text file
+          # We search for lines starting with http and use the line before it as the filename
+          while IFS= read -r line; do
+            # If the line starts with NAME:, grab the filename
+            if [[ "$line" =~ ^NAME:\ (.*) ]]; then
+              FILENAME="${BASH_REMATCH[1]}"
+            fi
+
+            # If the line starts with LINK:, grab the URL and download
+            if [[ "$line" =~ ^LINK:\ (https?://.*) ]]; then
+              URL="${BASH_REMATCH[1]}"
+              TARGET_PATH="$DEST_DIR/$FILENAME"
+
+              if [ ! -f "$TARGET_PATH" ]; then
+                echo "Downloading $FILENAME..."
+                curl -L -f -sS -o "$TARGET_PATH" "$URL"
+              else
+                echo "Skipping $FILENAME (exists)"
+              fi
+            fi
+          done < "$LIST_FILE"
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git lfs track "downloaded-components/*"
+          git add .gitattributes
+          git add downloaded-components/
+          
+          if git diff --staged --quiet; then
+            echo "No new files to commit."
+          else
+            git commit -m "Add downloaded components from text list"
+            git push
+          fi
