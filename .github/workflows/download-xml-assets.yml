@@ -1,10 +1,10 @@
-name: Download XML Components
+name: Download WinEmu Components
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'sp_winemu_all_components12.xml' # Trigger when this specific file changes
+      - 'sp_winemu_all_components12.xml'
 
 jobs:
   download-and-commit:
@@ -23,26 +23,26 @@ jobs:
         run: |
           DEST_DIR="downloaded-components"
           mkdir -p "$DEST_DIR"
-          
-          # Updated to your specific filename
           XML_FILE="sp_winemu_all_components12.xml"
 
           if [ ! -f "$XML_FILE" ]; then
-            echo "Error: $XML_FILE not found in the root directory!"
+            echo "Error: $XML_FILE not found!"
             exit 1
           fi
 
-          # Extract filename from 'name' attribute and link from tag content
-          xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, '|', .)" -n "$XML_FILE" | while IFS='|' read -r FILENAME URL; do
+          # 1. Extract the name attribute and the inner text content
+          # 2. Use grep/sed to find the download_url inside the JSON string
+          xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, ' ', .)" -n "$XML_FILE" | while read -r FILENAME JSON_CONTENT; do
             
-            # Clean whitespace
-            URL=$(echo "$URL" | xargs)
+            # Extract URL from the download_url field in the JSON string
+            URL=$(echo "$JSON_CONTENT" | grep -oP '(?<="download_url":")[^"]*')
             
             if [[ "$URL" =~ ^https?:// ]]; then
               TARGET_PATH="$DEST_DIR/$FILENAME"
               
+              # Download only if file doesn't exist
               if [ ! -f "$TARGET_PATH" ]; then
-                echo "Downloading $FILENAME from $URL..."
+                echo "Downloading $FILENAME..."
                 curl -L -s -o "$TARGET_PATH" "$URL"
               else
                 echo "Skipping $FILENAME, already exists."
@@ -60,6 +60,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No new components to add."
           else
-            git commit -m "Update components from sp_winemu_all_components12.xml"
+            git commit -m "Automated update: Downloaded components from WinEmu XML"
             git push
           fi
