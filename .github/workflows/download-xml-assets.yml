@@ -31,18 +31,19 @@ jobs:
           fi
 
           # 1. Extract the name attribute and the inner text content
-          # 2. Use grep/sed to find the download_url inside the JSON string
+          # 2. Use grep to specifically find the download_url inside the JSON string
           xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, ' ', .)" -n "$XML_FILE" | while read -r FILENAME JSON_CONTENT; do
             
-            # Extract URL from the download_url field in the JSON string
+            # Extract URL from the download_url field
             URL=$(echo "$JSON_CONTENT" | grep -oP '(?<="download_url":")[^"]*')
             
             if [[ "$URL" =~ ^https?:// ]]; then
+              # Fix potential double slashes in the extracted URL
+              URL=$(echo "$URL" | sed 's/\\//g')
               TARGET_PATH="$DEST_DIR/$FILENAME"
               
-              # Download only if file doesn't exist
               if [ ! -f "$TARGET_PATH" ]; then
-                echo "Downloading $FILENAME..."
+                echo "Downloading $FILENAME from $URL..."
                 curl -L -s -o "$TARGET_PATH" "$URL"
               else
                 echo "Skipping $FILENAME, already exists."
@@ -60,6 +61,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No new components to add."
           else
-            git commit -m "Automated update: Downloaded components from WinEmu XML"
+            git commit -m "Update components from WinEmu XML"
             git push
           fi
