@@ -1,10 +1,10 @@
 name: Download Components from List
 
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
   push:
     paths:
-      - 'component_list.txt' # Runs automatically when the text list is updated
+      - 'component_list.txt'
 
 jobs:
   download:
@@ -29,27 +29,31 @@ jobs:
             exit 1
           fi
 
-          # Loop through the text file
-          # We search for lines starting with http and use the line before it as the filename
-          while IFS= read -r line; do
-            # If the line starts with NAME:, grab the filename
+          # The 'tr' command here removes hidden Windows (CRLF) line endings
+          cat "$LIST_FILE" | tr -d '\r' | while IFS= read -r line; do
+            
+            # Detect the Name line
             if [[ "$line" =~ ^NAME:\ (.*) ]]; then
-              FILENAME="${BASH_REMATCH[1]}"
+              FILENAME=$(echo "${BASH_REMATCH[1]}" | xargs)
             fi
 
-            # If the line starts with LINK:, grab the URL and download
+            # Detect the Link line and Download
             if [[ "$line" =~ ^LINK:\ (https?://.*) ]]; then
-              URL="${BASH_REMATCH[1]}"
+              URL=$(echo "${BASH_REMATCH[1]}" | xargs)
               TARGET_PATH="$DEST_DIR/$FILENAME"
 
-              if [ ! -f "$TARGET_PATH" ]; then
-                echo "Downloading $FILENAME..."
-                curl -L -f -sS -o "$TARGET_PATH" "$URL"
-              else
-                echo "Skipping $FILENAME (exists)"
+              if [ -n "$FILENAME" ] && [ -n "$URL" ]; then
+                if [ ! -f "$TARGET_PATH" ]; then
+                  echo "Downloading $FILENAME..."
+                  curl -L -f -sS -o "$TARGET_PATH" "$URL"
+                else
+                  echo "Skipping $FILENAME (exists)"
+                fi
               fi
+              # Reset filename for the next block
+              FILENAME=""
             fi
-          done < "$LIST_FILE"
+          done
 
       - name: Commit and Push
         run: |
