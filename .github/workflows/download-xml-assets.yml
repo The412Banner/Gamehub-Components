@@ -15,36 +15,40 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          lfs: true # Enable LFS
 
       - name: Install Dependencies
-        run: sudo apt-get install -y xmlstarlet
+        run: |
+          sudo apt-get install -y xmlstarlet git-lfs
+          git lfs install
+
+      - name: Configure Git LFS
+        run: |
+          # Track all files in the download folder with LFS
+          mkdir -p downloaded-components
+          git lfs track "downloaded-components/*"
+          git add .gitattributes
 
       - name: Parse and Download Components
         run: |
           DEST_DIR="downloaded-components"
-          mkdir -p "$DEST_DIR"
           XML_FILE="sp_winemu_all_components12.xml"
 
-          if [ ! -f "$XML_FILE" ]; then
-            echo "Error: $XML_FILE not found!"
-            exit 1
-          fi
-
-          # 1. Extract the name attribute and the inner text content
-          # 2. Use grep to specifically find the download_url inside the JSON string
           xmlstarlet sel -t -m "//string[@name]" -v "concat(@name, ' ', .)" -n "$XML_FILE" | while read -r FILENAME JSON_CONTENT; do
             
             # Extract URL from the download_url field
             URL=$(echo "$JSON_CONTENT" | grep -oP '(?<="download_url":")[^"]*')
             
             if [[ "$URL" =~ ^https?:// ]]; then
-              # Fix potential double slashes in the extracted URL
+              # Clean escaped slashes
               URL=$(echo "$URL" | sed 's/\\//g')
               TARGET_PATH="$DEST_DIR/$FILENAME"
               
               if [ ! -f "$TARGET_PATH" ]; then
-                echo "Downloading $FILENAME from $URL..."
-                curl -L -s -o "$TARGET_PATH" "$URL"
+                echo "Downloading $FILENAME..."
+                # Use -C - to allow resuming if a download is interrupted
+                curl -L -s -C - -o "$TARGET_PATH" "$URL"
               else
                 echo "Skipping $FILENAME, already exists."
               fi
@@ -56,11 +60,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
+          git add .gitattributes
           git add downloaded-components/
           
           if git diff --staged --quiet; then
             echo "No new components to add."
           else
-            git commit -m "Update components from WinEmu XML"
+            git commit -m "Update components using Git LFS"
             git push
           fi
