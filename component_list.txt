@@ -1,4 +1,616 @@
 WINEMU COMPONENT DOWNLOAD LIST
 Filter: .tzst, .exe, .msi only
-Generated: Sun Feb  8 17:09:04 UTC 2026
+Generated: Sun Feb  8 17:09:23 UTC 2026
 ================================================
+NAME: Wine
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/8c43/45/06/Wine.tzst
+------------------------------------------------
+NAME: TheWitcher2
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/6465/fc/f3/TheWitcher2.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R13_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7b85/09/fe/turnip_v25.2.0_R13_mem.tzst
+------------------------------------------------
+NAME: Fex-20251128
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/194f/10/14/194f1014ebd3e2748908f00d327e9ff4.tzst
+------------------------------------------------
+NAME: EuroTruck2_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/1f09/56/5d/1f09565d8d042bcec69323aebd2ab6f0.tzst
+------------------------------------------------
+NAME: SKR_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/2a05/97/f2/SKR_Settings.tzst
+------------------------------------------------
+NAME: WUCHANG
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f355/b9/0b/WUCHANG.tzst
+------------------------------------------------
+NAME: Fex-20251120
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/ac5f/52/6c/ac5f526cc50cc8311bc5c46975f37cda.tzst
+------------------------------------------------
+NAME: SILENT HILL F
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/1a0b/58/72/1a0b587288325ca4a29949af0222b745.tzst
+------------------------------------------------
+NAME: mediafoundation_lite
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5702/83/34/mediafoundation_lite.tzst
+------------------------------------------------
+NAME: dxvk-2.5.3
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7f62/5d/30/dxvk-2.5.3.tzst
+------------------------------------------------
+NAME: Bt3_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b30d/eb/3e/Bt3_Settings.tzst
+------------------------------------------------
+NAME: WRC 9
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/43d0/59/83/WRC 9.tzst
+------------------------------------------------
+NAME: Box64-0.28-b1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/a868/26/84/box64-0.28-b1.tzst
+------------------------------------------------
+NAME: turnip_v25.0.0_R8
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4d7f/95/21/turnip_v25.0.0_R8.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R10
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/c8f6/d0/49/c8f6d049cbad544c5710cf7c1648527b.tzst
+------------------------------------------------
+NAME: turnip_v25.0.0_R5
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/29ef/92/20/turnip_v25.0.0_R5.tzst
+------------------------------------------------
+NAME: Hzd_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/563d/3a/4c/Hzd_Settings.tzst
+------------------------------------------------
+NAME: turnip_v25.0.0_R6
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/2eec/eb/80/Turnip_v25.0.0_R6.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R11
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4a17/bb/19/4a17bb19d0ad821cb4f6e3018711a3a7.tzst
+------------------------------------------------
+NAME: dxvk-2.5-1-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/d617/36/df/dxvk-2.5-1-gplasync.tzst
+------------------------------------------------
+NAME: dxvk-1.7.3
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/c768/38/b5/dxvk-1.7.3.tzst
+------------------------------------------------
+NAME: dxvk-1.7.2
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5ed1/06/cc/dxvk-1.7.2.tzst
+------------------------------------------------
+NAME: God_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f312/22/25/God_Settings.tzst
+------------------------------------------------
+NAME: turnip_v25.0.0_R1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/a56b/24/88/turnip_v25.0.0_R1.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R7_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f13d/ce/e9/Turnip_v25.2.0_R7_mem.tzst
+------------------------------------------------
+NAME: dxvk-v2.7.1-1-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/28c4/75/da/28c475da895104fee43cebc9b80a3a6d.tzst
+------------------------------------------------
+NAME: dxvk-2.3.1-arm64ec-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f18b/4a/94/dxvk-2.3.1-arm64ec-gplasync.tzst
+------------------------------------------------
+NAME: dxvk-1.10.3-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/e604/1e/b8/dxvk-async-1.10.3.tzst
+------------------------------------------------
+NAME: dxvk-2.3.1-arm64ec
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/9a4b/5d/c4/dxvk-arm64ec-2.3.1.tzst
+------------------------------------------------
+NAME: qcom-840
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5aff/e6/40/5affe6408a75b2cdcded4fa91925d382.tzst
+------------------------------------------------
+NAME: Fall_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/ab9b/0a/cf/Fall_Settings.tzst
+------------------------------------------------
+NAME: dxvk-2.4-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/e6fa/1f/9f/dxvk-2.4-gplasync.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R13
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7d86/ae/0a/turnip_v25.2.0_R13.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R12
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b43b/ca/68/turnip_v25.2.0_R12.tzst
+------------------------------------------------
+NAME: wined3d8.0
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/84e7/82/70/wined3d8.0.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R4_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3914/fe/da/3914feda79f173f1d06f9cd8d4985e5b.tzst
+------------------------------------------------
+NAME: turnip_v26.1.0_b1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b9d4/a0/a9/b9d4a0a9ea2d975e08a384cbeb7c6a27.tzst
+------------------------------------------------
+NAME: Fex-20251029
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/6cc2/b3/29/6cc2b329633dfbc95f23ea702cf84bd2.tzst
+------------------------------------------------
+NAME: turnip_v26.1.0_b2
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b8f9/8f/ce/b8f98fce654e728e73b1cd3730dc0532.tzst
+------------------------------------------------
+NAME: Fex-20251025
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/6d24/fd/f3/fex-20251025.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R11
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3955/44/34/turnip_v25.2.0_R11.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R10
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7c2e/5d/af/turnip_v25.2.0_R10.tzst
+------------------------------------------------
+NAME: turnip_v24.3.0_R8
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/999f/ad/da/turnip_v24.3.0_R8.tzst
+------------------------------------------------
+NAME: turnip_v24.3.0_R7
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/3e6b/57/70/turnip_v24.3.0_R7.tzst
+------------------------------------------------
+NAME: turnip_v26.1.0_R1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/aa75/f2/fc/aa75f2fc098cdcf5f46469a1bf21601f.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R3_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/e61c/51/3e/turnip_v25.2.0_R3_mem.tzst
+------------------------------------------------
+NAME: Rock_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5182/f7/fa/Rock_Settings.tzst
+------------------------------------------------
+NAME: Adreno_819
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/1f6a/77/e4/Adreno_819.tzst
+------------------------------------------------
+NAME: dxvk-2.4.1-arm64ec
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f336/4d/af/dxvk-2.4.1-arm64ec.tzst
+------------------------------------------------
+NAME: Pal7s_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/33d9/c1/3e/Pal7s_Settings.tzst
+------------------------------------------------
+NAME: turnip_v24.3.0_R2
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/be6c/f6/d3/turnip_v24.3.0_R2.tzst
+------------------------------------------------
+NAME: Torchlight II
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/747c/4e/d9/Torchlight II.tzst
+------------------------------------------------
+NAME: Adreno_814
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4065/61/f4/Adreno_814.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R5_one_ui7
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/6cc3/98/8c/turnip_v25.3.0_R5_one_ui7_fix.tzst
+------------------------------------------------
+NAME: turnip_v24.3.0_R6
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7699/fe/ac/turnip_v24.3.0_R6.tzst
+------------------------------------------------
+NAME: turnip_v24.3.0_R5
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/c3fc/3a/2b/turnip_v24.3.0_R5.tzst
+------------------------------------------------
+NAME: BBQ_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/e86b/af/2b/BBQ_Settings.tzst
+------------------------------------------------
+NAME: DontStarve_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/66f4/c6/16/66f4c616a62aea2f83f3776fb5662ed9.tzst
+------------------------------------------------
+NAME: Riders_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/835f/0f/81/Riders_Settings.tzst
+------------------------------------------------
+NAME: Fex_20250910
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/37a7/50/36/fex-20250910.tzst
+------------------------------------------------
+NAME: Box64-0.38
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7d91/a3/ed/7d91a3edb0b829b9359dd494754ab521.tzst
+------------------------------------------------
+NAME: Fex_20250802
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4c7f/9b/53/Fex_20250802.tzst
+------------------------------------------------
+NAME: Fex_20250806
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4733/f5/96/Fex_20250806.tzst
+------------------------------------------------
+NAME: Box64-0.39
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/30a7/c5/21/30a7c5210e11f084430195a3a679e1e5.tzst
+------------------------------------------------
+NAME: vkd3d-2.12
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/4f3e/99/43/vkd3d-2.12.tzst
+------------------------------------------------
+NAME: vkd3d-2.13
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/274a/6e/0b/vkd3d-2.13.tzst
+------------------------------------------------
+NAME: dxvk-2.3.1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/f63c/6b/c5/dxvk-2.3.1.tzst
+------------------------------------------------
+NAME: DARK_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3dbc/98/26/DARK_Settings.tzst
+------------------------------------------------
+NAME: dxvk-v2.6-1-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/8fbc/ef/bb/dxvk-v2.6-1-gplasync.tzst
+------------------------------------------------
+NAME: dxvk-1.5.5
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/0b6e/12/d4/dxvk-1.5.5.tzst
+------------------------------------------------
+NAME: APlague_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/81b8/19/64/APlague_Settings.tzst
+------------------------------------------------
+NAME: id Software
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5657/96/c1/565796c13769026a2d1b12a777293f9e.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R12_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f173/e8/e1/turnip_v25.2.0_R12_mem.tzst
+------------------------------------------------
+NAME: turnip_v24.2.0_a32
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/3948/5b/41/turnip_24.2.0_a32.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R1_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f351/63/48/f3516348c20ce5bffc8331f6ce262ad1.tzst
+------------------------------------------------
+NAME: WUKONG
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/10fa/8b/5e/WUKONG.tzst
+------------------------------------------------
+NAME: Absolum
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/a535/18/fe/a53518feaa1213130be8cf045537ceb6.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R4_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/1e2f/84/20/turnip_v25.2.0_R4_mem.tzst
+------------------------------------------------
+NAME: dxvk-2.6
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/2fa9/a6/72/dxvk-2.6.tzst
+------------------------------------------------
+NAME: dxvk-2.4
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/1ba3/cd/07/dxvk-2.4.tzst
+------------------------------------------------
+NAME: dxvk-2.5
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/5660/cb/d4/dxvk-2.5.tzst
+------------------------------------------------
+NAME: FIFA11_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/a994/57/c4/FIFA11_Settings.tzst
+------------------------------------------------
+NAME: Fex_20250823
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/c6b6/47/5a/fex-20250823.tzst
+------------------------------------------------
+NAME: vkd3d-proton-2.14.1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4b52/07/e6/vkd3d-proton-2.14.1.tzst
+------------------------------------------------
+NAME: Fex-20251217
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/bc50/8d/00/bc508d00a4d352f4e9de6a902aa104bb.tzst
+------------------------------------------------
+NAME: dxvk-1.10.3
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/9924/b0/76/dxvk-1.10.3.tzst
+------------------------------------------------
+NAME: TheHinokamiChronicles2_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4665/5c/21/46655c21cc8911f9c54f7a1aed926cab.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R5_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/8698/75/41/869875410f35db7bbe9ddc4c33d4136f.tzst
+------------------------------------------------
+NAME: Bt4_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/391d/91/a4/Bt4_Settings.tzst
+------------------------------------------------
+NAME: gta5_settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/e1ee/6c/d1/gta5_settings.tzst
+------------------------------------------------
+NAME: TESV_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/bdba/90/41/TESV_Settings.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R3_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/cfc9/e3/e5/turnip_v25.3.0_R3_mem.tzst
+------------------------------------------------
+NAME: base
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3d5c/31/b1/base.tzst
+------------------------------------------------
+NAME: Fex_20241214
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/c48e/8c/c6/Fex_20241214.tzst
+------------------------------------------------
+NAME: Resident Evil 3
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/bcd5/80/42/Resident Evil 3.tzst
+------------------------------------------------
+NAME: 8Elite-800.40
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7ac9/5a/1d/8E-800.40.tzst
+------------------------------------------------
+NAME: turnip_v24.2.0_R19
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/eb33/63/dd/turnip_24.2.0_R19.tzst
+------------------------------------------------
+NAME: 8Elite-800.46
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5958/b0/0c/8E-800.46.tzst
+------------------------------------------------
+NAME: Fex_20250728
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/18d0/3f/4e/Fex_20250728.tzst
+------------------------------------------------
+NAME: FINAL FANTASY 7_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/724e/e8/9e/724ee89efc09e42c40d15488ee50ad61.tzst
+------------------------------------------------
+NAME: dxvk-0.96
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/3398/3f/dd/dxvk-0.96.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R8
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3f0d/64/90/3f0d649069ae4cd51c3d03cfd2b44736.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R7
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/2cdb/59/fc/2cdb59fcec897aa53d820c658e0a511a.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R6
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/9ac7/1f/fd/9ac71ffd0fad2fb993d5b5f0addcdbce.tzst
+------------------------------------------------
+NAME: Fex-20250429
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/e49b/b5/8e/Fex-20250429.tzst
+------------------------------------------------
+NAME: turnip_v24.2.0_R22
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/e02b/7b/fb/turnip_v24.2.0_R22.tzst
+------------------------------------------------
+NAME: qcom-849.0
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/a103/45/3b/a103453b4e5aef0db45845a813745a44.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R11_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5fe3/8f/fe/turnip_v25.2.0_R11_mem.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R2_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/6c25/13/68/6c2513688fbd69a7931d8223aadf7c07.tzst
+------------------------------------------------
+NAME: 8Elite-800.51
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/e6e9/a5/24/8Elite-800.51.tzst
+------------------------------------------------
+NAME: dxvk-v2.4.1-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/d430/3a/db/dxvk-v2.4.1-async.tzst
+------------------------------------------------
+NAME: ItTakesTwo
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/38d1/bd/16/ItTakesTwo.tzst
+------------------------------------------------
+NAME: turnip_v25.1.0_R6
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/c609/13/ec/Turnip_v25.1.0_R6.tzst
+------------------------------------------------
+NAME: turnip_v24.3.0-R12
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/7ab0/71/eb/turnip_v24.3.0-R12.tzst
+------------------------------------------------
+NAME: dxvk-2.2-4-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/d27f/2b/35/dxvk-2.2-4-gplasync.tzst
+------------------------------------------------
+NAME: dxvk-v2.5.2-1-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5895/37/ee/dxvk-v2.5.2-1-gplasync.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R5_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4655/b7/64/turnip_v25.2.0_R5_mem.tzst
+------------------------------------------------
+NAME: Box64-0.37-b2
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/bfb6/b3/91/bfb6b3914b8f7abb792d8acafa676861.tzst
+------------------------------------------------
+NAME: Box64-0.37-b1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b9dd/3f/72/box64_0.37_1.tzst
+------------------------------------------------
+NAME: qcom-837.6
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/8af0/e8/4d/8af0e84d372e9476c9359b119199690e.tzst
+------------------------------------------------
+NAME: mod.io_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3e20/de/8e/3e20de8eb12a74bcbb41a815b84859a3.tzst
+------------------------------------------------
+NAME: Fex_20250507
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b758/d7/cd/Fex_20250507.tzst
+------------------------------------------------
+NAME: 8Elite-800.26
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/d402/9c/11/8E-800.26.tzst
+------------------------------------------------
+NAME: dxvk-v1.11.1-mali-fix
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/9f83/bc/10/9f83bc10819ff9636a7300dcd114ba87.tzst
+------------------------------------------------
+NAME: dxvk-v2.6.2-1-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/35b6/7d/84/dxvk-v2.6.2-1-async.tzst
+------------------------------------------------
+NAME: turnip_v25.1.0_R1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/de2c/47/56/turnip_v25.1.0_R1.tzst
+------------------------------------------------
+NAME: A Plague_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/d296/09/be/d29609bed803165de777bafa8cff629d.tzst
+------------------------------------------------
+NAME: Fex-20260103
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/ca83/77/9f/ca83779fa610be7ba0f19e6b305a0e8b.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R8
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f666/03/67/f666036707a6e86ec62550a61557ad8f.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R9
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3f75/80/cd/3f7580cd1e19adfec2d08bbb9fe4ad41.tzst
+------------------------------------------------
+NAME: turnip_v25.1.0_R5
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f9c7/a4/5e/turnip_v25.1.0_R5.tzst
+------------------------------------------------
+NAME: Massive_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/fa20/b2/97/fa20b2979210b8f2e37c3900095260b1.tzst
+------------------------------------------------
+NAME: DyingLight_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/c1ef/2c/e1/c1ef2ce110c16e540b772e96678f5311.tzst
+------------------------------------------------
+NAME: 8Elite-800.30
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/bb60/6c/1f/8E-800.30.tzst
+------------------------------------------------
+NAME: 8Elite-800.34
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/be48/b5/6d/8E-800.34.tzst
+------------------------------------------------
+NAME: 8Elite-800.33
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b458/49/74/8E-800.33.tzst
+------------------------------------------------
+NAME: 8Elite-800.36
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5d25/fe/77/8E-800.36.tzst
+------------------------------------------------
+NAME: 8Elite-800.35
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/8276/b4/e2/8E-800.35.tzst
+------------------------------------------------
+NAME: NFS17
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/83dd/a0/92/NFS17.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R4_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3608/c8/83/turnip_v25.3.0_R4_mem.tzst
+------------------------------------------------
+NAME: Adreno_805.0
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7056/ec/50/8E-805.0.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R6_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/ae87/8e/f7/ae878ef7c1ddba3b0f6b7e324fc749bf.tzst
+------------------------------------------------
+NAME: goldberg
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/ecc9/74/0c/goldberg.tzst
+------------------------------------------------
+NAME: 8Elite_800.21
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/8b3b/76/09/8E-800.21.tzst
+------------------------------------------------
+NAME: 8Elite_800.22
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/26b4/55/5e/8E-800.22.tzst
+------------------------------------------------
+NAME: dxvk-v1.11.0-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/a37f/ad/0a/a37fad0a11761851655437a38e8d8557.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R6_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/d2be/49/5d/Turnip_v25.3.0_R6_mem.tzst
+------------------------------------------------
+NAME: dxvk-2.3.1-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/55c6/53/ec/dxvk-async-2.3.1.tzst
+------------------------------------------------
+NAME: dxvk-2.7.1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/423c/f5/98/423cf59811d7228cd5fbd545d622bd69.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R8_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/24ba/60/5e/24ba605e127248c2c179f9ea2a2754df.tzst
+------------------------------------------------
+NAME: GrimDawnController_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3ea6/e9/80/3ea6e9806cc1b7ce249434cee78d3490.tzst
+------------------------------------------------
+NAME: gujian3
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/cff3/49/f4/gujian3.tzst
+------------------------------------------------
+NAME: qcom-800.64
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/bed2/3f/45/bed23f4587576f40ddc2a9a4f3f9b500.tzst
+------------------------------------------------
+NAME: vkd3d-proton-3.0b
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/53df/43/b4/53df43b4a543dad5b0e4b892954d66a9.tzst
+------------------------------------------------
+NAME: BLEACH
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f351/01/58/BLEACH.tzst
+------------------------------------------------
+NAME: vkd3d-proton-3.0a
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/c201/58/04/c2015804d631059ac2dfbff18e71fcde.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R4
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7543/6f/ca/turnip_v25.3.0_R4.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R5
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/48e4/43/90/turnip_v25.3.0_R5.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R6
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/9f27/e9/4a/turnip_v25.3.0_R6.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R7
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/35d5/77/e7/Turnip_v25.3.0_R7.tzst
+------------------------------------------------
+NAME: turnip_v25.3.0_R3
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/29e4/1e/0f/turnip_v25.3.0_R3.tzst
+------------------------------------------------
+NAME: Wreckfest_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/98b2/e6/91/98b2e6918f362a024c2eb8e354af7d5b.tzst
+------------------------------------------------
+NAME: qcom-842.13
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b5af/77/f0/b5af77f0407af1ad501994c9758ea23e.tzst
+------------------------------------------------
+NAME: sifu_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/81d9/3f/98/81d93f983ce0e2ad65e0ea0b76268e26.tzst
+------------------------------------------------
+NAME: AssettoCorsa
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/194e/04/f8/AssettoCorsa.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R6_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/994b/35/5f/Turnip_v25.2.0_R6_mem.tzst
+------------------------------------------------
+NAME: qcom-842.16
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/9064/7d/6d/90647d6df97ee5059625ba33de0721b5.tzst
+------------------------------------------------
+NAME: MetroExodus_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b1cd/74/0e/b1cd740e61ca79e7743755a37221b354.tzst
+------------------------------------------------
+NAME: qcom-842.19
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/08b5/84/ec/08b584ecdba28756c258c1e8f07e6418.tzst
+------------------------------------------------
+NAME: TinasWonderlands_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/0085/e7/ca/0085e7cae61107dcc51b5c3457fc6692.tzst
+------------------------------------------------
+NAME: Gta5_Setting
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/8705/51/a4/Gta5_Setting.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R6
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/58f6/24/30/Turnip_v25.2.0_R6.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R5
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/49b2/a2/84/turnip_v25.2.0_R5.tzst
+------------------------------------------------
+NAME: Kena_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/bc72/c3/c5/Kena_Settings.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R4
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5118/fb/25/turnip_v25.2.0_R4.tzst
+------------------------------------------------
+NAME: Rev_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/a889/c5/05/Rev_Settings.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/7516/bb/bc/turnip_v25.2.0_R1.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R3_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/a7f6/24/c8/a7f624c8a6934369f6223fe4b1123b17.tzst
+------------------------------------------------
+NAME: dxvk-2.6-arm64ec-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/c31c/03/de/dxvk-2.6-arm64ec-gplasync.tzst
+------------------------------------------------
+NAME: Adreno_762.10
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4e04/6e/11/adreno_762.10.tzst
+------------------------------------------------
+NAME: qcom-842.1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/cf38/13/67/cf381367be6ad0e3a643ce18c5f60359.tzst
+------------------------------------------------
+NAME: dxvk-1.10.3-arm64ec-async
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/bfe8/33/75/dxvk-1.10.3-arm64ec-async.tzst
+------------------------------------------------
+NAME: Msmm_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/e4c7/e5/be/Msmm_Settings.tzst
+------------------------------------------------
+NAME: Alice_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/026e/c3/94/Alice_Settings.tzst
+------------------------------------------------
+NAME: MountandBlade2_Settings
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/56fc/3c/89/56fc3c89329fc14a09b09b98cf005383.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R5
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/fdba/91/b3/fdba91b3fbe57759cca4cb093f630966.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R4
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/5723/d4/d8/5723d4d80d400dc0149294ffd57659e6.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R3
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/4f95/62/8c/4f95628cbf9c50dabc79c561814b2a37.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R7_mem
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/ca97/fb/2a/ca97fb2a4b71ab7d13e0e85330bff306.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R2
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/822e/42/3f/822e423fb4a7d8185b342fc641bdfa22.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R8_b1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/28f3/cc/ef/28f3ccef594f9cbdc06b9d5b428d7e7f.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/1bdc/40/f0/1bdc40f0a00323c1b926b5bde8777ec0.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R8_b2
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3245/65/ce/324565ce3f9e72e989428c78336ed5e7.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R8_b3
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/012f/bd/c1/012fbdc108267acf65d5f8fdbb182532.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R8_b4
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/ecfa/50/f7/ecfa50f7d3cc3001369299ad60276494.tzst
+------------------------------------------------
+NAME: turnip_v26.0.0_R8_b5
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/2090/11/1d/2090111d85c99cdf2ec9b077bfc1962f.tzst
+------------------------------------------------
+NAME: GTA5_Setting
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/e1ee/6c/d1/gta5_settings.tzst
+------------------------------------------------
+NAME: Cyberpunk2077
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/2059/2c/e6/Cyberpunk2077.tzst
+------------------------------------------------
+NAME: Box64-0.31-b1
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/96ea/e3/fb/box64_0.31_b1.tzst
+------------------------------------------------
+NAME: 8eGen5-842.6
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/d2c1/85/69/d2c18569d828ba8b7c66804aa8be2d54.tzst
+------------------------------------------------
+NAME: 8eGen5-842.8
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/f69b/fd/a1/f69bfda11b5ada8e6542e94896570193.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R8
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/6bf3/a5/a5/Turnip_v25.2.0_R8.tzst
+------------------------------------------------
+NAME: turnip_v25.2.0_R7
+LINK: https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/1736/0e/23/Turnip_v25.2.0_R7.tzst
+------------------------------------------------
