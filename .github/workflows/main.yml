@@ -3,7 +3,7 @@ name: Build VKD3D-Proton (ARM64EC Standalone)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 17 * * *"
+    - cron: "0 18 * * *"
 
 jobs:
   build-arm64ec:
@@ -12,7 +12,6 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update -y
-          # Standard build tools + cross-compilation basics
           sudo apt-get install -y --no-install-recommends \
             ca-certificates curl xz-utils jq git glslang-tools \
             build-essential python3 python3-pip pkg-config \
@@ -20,18 +19,15 @@ jobs:
 
       - name: Setup Toolchain (llvm-mingw)
         run: |
-          # using the 20251104 tag consistent with your other workflows
           LLVM_MINGW_TAG="20251104"
           TOOLCHAIN_DIR="/opt/llvm-mingw"
           
-          echo "Downloading Toolchain..."
           wget -q "https://github.com/mstorsjo/llvm-mingw/releases/download/$LLVM_MINGW_TAG/llvm-mingw-$LLVM_MINGW_TAG-ucrt-ubuntu-22.04-x86_64.tar.xz" -O llvm.tar.xz
           
           sudo rm -rf "$TOOLCHAIN_DIR"
           sudo mkdir -p "$TOOLCHAIN_DIR"
           sudo tar -C "$TOOLCHAIN_DIR" --strip-components=1 -xJf llvm.tar.xz
           
-          # Add to PATH for this runner
           echo "$TOOLCHAIN_DIR/bin" >> $GITHUB_PATH
 
       - name: Checkout VKD3D-Proton
@@ -47,13 +43,13 @@ jobs:
         run: |
           cd src
           COMMIT_HASH=$(git rev-parse --short HEAD)
-          # You can change '3.0b' to whatever version prefix you prefer
           VERSION_NAME="3.0b-ARM64EC-${COMMIT_HASH}"
           echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
 
       - name: Build ARM64EC & x86
         run: |
-          # 1. Define the ARM64EC Cross File
+          # 1. Define ARM64EC Cross File
+          # CRITICAL FIX: cpu_family must be 'aarch64' for Winlator/Android compatibility
           cat <<EOF > arm64ec.txt
           [binaries]
           c = 'arm64ec-w64-mingw32-clang'
@@ -70,8 +66,7 @@ jobs:
           endian = 'little'
           EOF
 
-          # 2. Define the x86 (32-bit) Cross File
-          # (Required for SysWOW64 compatibility in emulators)
+          # 2. Define x86 (32-bit) Cross File
           cat <<EOF > x86.txt
           [binaries]
           c = 'i686-w64-mingw32-clang'
@@ -91,12 +86,10 @@ jobs:
           cd src
           
           # 3. Build ARM64EC (System32)
-          echo "Building ARM64EC..."
           meson setup build-ec --cross-file ../arm64ec.txt -Dbuildtype=release -Dstrip=true
           ninja -C build-ec
 
           # 4. Build x86 (SysWOW64)
-          echo "Building x86..."
           meson setup build-x86 --cross-file ../x86.txt -Dbuildtype=release -Dstrip=true
           ninja -C build-x86
 
@@ -120,7 +113,7 @@ jobs:
             "type": "VKD3D",
             "versionName": "${{ env.VERSION_NAME }}",
             "versionCode": 0,
-            "description": "VKD3D-Proton (ARM64EC)\nVersion: ${{ env.VERSION_NAME }}\nOptimized for FEX/Windows-on-ARM",
+            "description": "VKD3D-Proton (ARM64EC)\nVersion: ${{ env.VERSION_NAME }}\nOptimized for FEX/Winlator",
             "files": [
               {"source": "system32/d3d12.dll", "target": "\${system32}/d3d12.dll"},
               {"source": "system32/d3d12core.dll", "target": "\${system32}/d3d12core.dll"},
@@ -130,9 +123,10 @@ jobs:
           }
           EOF
 
-          # Compress
           cd final_package
-          tar -cJf ../VKD3D-Proton-${{ env.VERSION_NAME }}.wcp *
+          
+          # CRITICAL FIX: Use ZSTD compression and force root ownership for Android extraction
+          tar --zstd --format=gnu --owner=0 --group=0 --numeric-owner -cf ../VKD3D-Proton-${{ env.VERSION_NAME }}.wcp *
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
