@@ -8,9 +8,6 @@ on:
     - cron: '0 9 * * *' # Runs daily at 9 AM UTC
 
 jobs:
-  # ----------------------------------------------------------------
-  # JOB 1: The Build Matrix (Runs Parallel)
-  # ----------------------------------------------------------------
   build-box64-matrix:
     name: Build Box64 (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -18,9 +15,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # ----------------------------------------------------------------
+          # 1. Official Upstream
+          # ----------------------------------------------------------------
           - name: "Official"
             repo_url: "https://github.com/ptitSeb/box64"
             branch: "main"
+          
+          # ----------------------------------------------------------------
+          # 2. Pipetto Fork
+          # ----------------------------------------------------------------
           - name: "Pipetto"
             repo_url: "https://github.com/Pipetto-crypto/box64" 
             branch: "main"
@@ -38,6 +42,7 @@ jobs:
           wget -q https://dl.google.com/android/repository/android-ndk-r26b-linux.zip
           unzip -q android-ndk-r26b-linux.zip
           echo "ANDROID_NDK_HOME=$PWD/android-ndk-r26b" >> $GITHUB_ENV
+          # API 31 (Android 12) for Bionic optimization
           echo "BOX64_COMPILER=$PWD/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android31-clang" >> $GITHUB_ENV
 
       - name: Clone Repository (${{ matrix.name }})
@@ -53,25 +58,38 @@ jobs:
           VERSION="$MAJOR.$MINOR.$REVISION"
           COMMIT=$(git rev-parse --short HEAD)
           
-          # Distinct filenames for each variant
+          # Naming format: Box64-Pipetto-v0.3.2-a1b2c3-bionic
           FULL_V="${{ matrix.name }}-${VERSION}-${COMMIT}-bionic"
           echo "FULL_VERSION=$FULL_V" >> $GITHUB_ENV
-          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
 
       - name: Configure and Build (Bionic Optimized)
         run: |
           mkdir build && cd build
+          
+          # Optimized Flags: BIONIC=1, NO TRACE, NO TERMUX, API 31
           cmake ../source \
             -DCMAKE_C_COMPILER=${{ env.BOX64_COMPILER }} \
-            -DANDROID=1 -DBIONIC=1 -DARM_DYNAREC=1 -DBAD_SIGNAL=1 -DTERMUX=0 -DHAVE_TRACE=0 -DCMAKE_BUILD_TYPE=Release
+            -DANDROID=1 \
+            -DBIONIC=1 \
+            -DARM_DYNAREC=1 \
+            -DBAD_SIGNAL=1 \
+            -DTERMUX=0 \
+            -DHAVE_TRACE=0 \
+            -DCMAKE_BUILD_TYPE=Release
+            
           make -j$(nproc)
+          
+          # Verification
+          readelf -d box64 | grep -q "NEEDED.*libc.so" || { echo "Linking failed!"; exit 1; }
+          
+          # Strip symbols
           ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip box64
 
       - name: Package
         run: |
           cd build
           
-          # Create Profile
+          # Generate Winlator Profile
           cat <<EOF > profile.json
           {
             "type": "Box64",
@@ -86,82 +104,20 @@ jobs:
           cp box64 pkg_content/
           cp profile.json pkg_content/
           
-          # Create WCP (Winlator)
           cd pkg_content
+          
+          # Create ZIP (Raw Files)
+          zip -r "../Box64-${{ env.FULL_VERSION }}.zip" .
+          
+          # Create WCP (Winlator Package)
           tar -cf ../temp.tar .
           cd ..
           mv temp.tar temp_archive
           xz -9 -c temp_archive > "Box64-${{ env.FULL_VERSION }}.wcp"
 
-      # Upload to TEMPORARY separate artifacts (we merge them next)
       - uses: actions/upload-artifact@v4
         with:
-          name: temp-${{ matrix.name }}
-          path: build/*.wcp
-
-  # ----------------------------------------------------------------
-  # JOB 2: Merge & Release
-  # ----------------------------------------------------------------
-  release-merged:
-    name: Merge and Release
-    runs-on: ubuntu-latest
-    if: always()
-    needs: build-box64-matrix
-    permissions:
-      contents: write
-    steps:
-      - name: Download All Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-          merge-multiple: true # This dumps all .wcp files into one folder
-
-      - name: Create Merged Bundle
-        run: |
-          cd artifacts
-          # Create a ZIP containing ALL built .wcp files
-          zip -r Box64-Dual-Bundle.zip *.wcp
-          ls -R
-
-      - name: Generate Tag
-        run: echo "TAG_NAME=box64-dual-$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: "Box64 Dual Source: $(date +'%Y-%m-%d')"
-          make_latest: true
-          body: |
-            ### 📦 Dual Source Build (Bionic)
-            
-            This release contains the latest builds from both:
-            1. **Official** (ptitSeb)
-            2. **Pipetto** (Pipetto-crypto)
-            
-            **Download Options:**
-            * `Box64-Dual-Bundle.zip` - Contains BOTH versions in one download.
-            * `.wcp` files - Individual versions for Winlator.
-          files: |
-            ./artifacts/*.wcp
-            ./artifacts/Box64-Dual-Bundle.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Notify Discord
-        if: success()
-        uses: ilshidur/action-discord@master
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        with:
-          args: "🚀 **Box64 Dual-Build Released!**\n\nOfficial & Pipetto builds ready.\nDownload: https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG_NAME }}"
-
-      - name: Cleanup Old Releases
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release list --limit 30 --json tagName,createdAt \
-          | jq -r '.[] | select(.tagName | startswith("box64-dual-")) | .tagName' \
-          | sort -r \
-          | tail -n +6 \
-          | xargs -I {} -r gh release delete {} --cleanup-tag -y
+          name: box64-${{ matrix.name }}
+          path: |
+            build/*.wcp
+            build/*.zip
