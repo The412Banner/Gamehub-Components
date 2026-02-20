@@ -5,7 +5,7 @@ on:
 
 jobs:
   # ==================================================================
-  # JOB 1: DXVK 2.7.1 x86/x64 (Standard & GPLAsync)
+  # JOB 1: DXVK 2.7.1 x86/x64
   # ==================================================================
   build-dxvk-standard:
     name: Build DXVK 2.7.1 (${{ matrix.type }})
@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        type: [standard, async]
+        type: [standard, async, gplasync]
     steps:
       - name: Install Dependencies
         run: |
@@ -33,6 +33,11 @@ jobs:
           git checkout v2.7.1
           
           if [ "${{ matrix.type }}" == "async" ]; then
+            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-2.7.1-1.patch
+            git apply dxvk-gplasync-2.7.1-1.patch
+            echo "VERSION_NAME=2.7.1-async" >> $GITHUB_ENV
+            echo "DESC_TEXT=DXVK 2.7.1 (Async)" >> $GITHUB_ENV
+          elif [ "${{ matrix.type }}" == "gplasync" ]; then
             wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-2.7.1-1.patch
             git apply dxvk-gplasync-2.7.1-1.patch
             echo "VERSION_NAME=2.7.1-gplasync" >> $GITHUB_ENV
@@ -86,7 +91,7 @@ jobs:
             *.zip
 
   # ==================================================================
-  # JOB 2: DXVK 2.7.1 ARM64EC (Standard & GPLAsync)
+  # JOB 2: DXVK 2.7.1 ARM64EC
   # ==================================================================
   build-dxvk-arm64ec:
     name: Build DXVK 2.7.1 ARM64EC (${{ matrix.type }})
@@ -94,7 +99,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        type: [standard, async]
+        type: [standard, async, gplasync]
     steps:
       - name: Install Dependencies
         run: |
@@ -121,6 +126,11 @@ jobs:
           git checkout v2.7.1
           
           if [ "${{ matrix.type }}" == "async" ]; then
+            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-2.7.1-1.patch
+            git apply dxvk-gplasync-2.7.1-1.patch
+            echo "VERSION_NAME=2.7.1-async-arm64ec" >> $GITHUB_ENV
+            echo "DESC_TEXT=DXVK 2.7.1 ARM64EC (Async)" >> $GITHUB_ENV
+          elif [ "${{ matrix.type }}" == "gplasync" ]; then
             wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-2.7.1-1.patch
             git apply dxvk-gplasync-2.7.1-1.patch
             echo "VERSION_NAME=2.7.1-gplasync-arm64ec" >> $GITHUB_ENV
@@ -257,13 +267,17 @@ jobs:
           body: |
             ### 🚀 DXVK 2.7.1 Builds
             
-            This release contains 4 targeted builds of DXVK v2.7.1:
+            This release contains 6 targeted builds of DXVK v2.7.1:
             1. **DXVK 2.7.1 (Standard)**
-            2. **DXVK 2.7.1 (GPLAsync)**
-            3. **DXVK 2.7.1 ARM64EC (Standard)**
-            4. **DXVK 2.7.1 ARM64EC (GPLAsync)**
+            2. **DXVK 2.7.1 (Async)**
+            3. **DXVK 2.7.1 (GPLAsync)**
+            4. **DXVK 2.7.1 ARM64EC (Standard)**
+            5. **DXVK 2.7.1 ARM64EC (Async)**
+            6. **DXVK 2.7.1 ARM64EC (GPLAsync)**
             
             Packaged and ready for Winlator (`.wcp` and `.zip`).
+            
+            *Note: As of DXVK 2.7, upstream removed the state cache that `gplAsyncCache` relied on. Therefore, both the "Async" and "GPLAsync" variants here use the exact same updated GPLAsync patch from Ph42oN, but they are built and labeled distinctively to easily slot into your launcher configurations.*
           files: |
             ./artifacts/*.wcp
             ./artifacts/*.zip
