@@ -1,14 +1,16 @@
-name: DXVK 2.7.1 Builds
+name: DXVK Nightly Builds (Latest Master)
 
 on:
   workflow_dispatch:
+  # schedule:
+  #   - cron: '0 9 * * *' # Uncomment to run automatically every day at 9 AM UTC
 
 jobs:
   # ==================================================================
-  # JOB 1: DXVK 2.7.1 x86/x64
+  # JOB 1: DXVK Master x86/x64
   # ==================================================================
   build-dxvk-standard:
-    name: Build DXVK 2.7.1 (${{ matrix.type }})
+    name: Build DXVK Nightly (${{ matrix.type }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -30,32 +32,32 @@ jobs:
         run: |
           git clone --recursive https://github.com/doitsujin/dxvk.git dxvk
           cd dxvk
-          git checkout v2.7.1
+          COMMIT_HASH=$(git rev-parse --short HEAD)
           
           if [ "${{ matrix.type }}" == "async" ]; then
-            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-2.7.1-1.patch
-            git apply dxvk-gplasync-2.7.1-1.patch
-            echo "VERSION_NAME=2.7.1-async" >> $GITHUB_ENV
-            echo "DESC_TEXT=DXVK 2.7.1 (Async)" >> $GITHUB_ENV
+            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch
+            git apply dxvk-gplasync-master.patch
+            echo "VERSION_NAME=nightly-async-${COMMIT_HASH}" >> $GITHUB_ENV
+            echo "DESC_TEXT=DXVK Nightly (Async)" >> $GITHUB_ENV
           elif [ "${{ matrix.type }}" == "gplasync" ]; then
-            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-2.7.1-1.patch
-            git apply dxvk-gplasync-2.7.1-1.patch
-            echo "VERSION_NAME=2.7.1-gplasync" >> $GITHUB_ENV
-            echo "DESC_TEXT=DXVK 2.7.1 (GPLAsync)" >> $GITHUB_ENV
+            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch
+            git apply dxvk-gplasync-master.patch
+            echo "VERSION_NAME=nightly-gplasync-${COMMIT_HASH}" >> $GITHUB_ENV
+            echo "DESC_TEXT=DXVK Nightly (GPLAsync)" >> $GITHUB_ENV
           else
-            echo "VERSION_NAME=2.7.1-standard" >> $GITHUB_ENV
-            echo "DESC_TEXT=DXVK 2.7.1 (Standard)" >> $GITHUB_ENV
+            echo "VERSION_NAME=nightly-standard-${COMMIT_HASH}" >> $GITHUB_ENV
+            echo "DESC_TEXT=DXVK Nightly (Standard)" >> $GITHUB_ENV
           fi
           
           sed -i 's/ninja/ninja -j 2/g' package-release.sh
-          ./package-release.sh v2.7.1 ../dxvk-built --no-package
+          ./package-release.sh master ../dxvk-built --no-package
 
       - name: Package
         run: |
           mkdir -p packaging/system32
           mkdir -p packaging/syswow64
-          cp -r dxvk-built/dxvk-v2.7.1/x64/* packaging/system32/
-          cp -r dxvk-built/dxvk-v2.7.1/x32/* packaging/syswow64/
+          cp -r dxvk-built/dxvk-master/x64/* packaging/system32/
+          cp -r dxvk-built/dxvk-master/x32/* packaging/syswow64/
           
           cat <<EOF > packaging/profile.json
           {
@@ -91,10 +93,10 @@ jobs:
             *.zip
 
   # ==================================================================
-  # JOB 2: DXVK 2.7.1 ARM64EC
+  # JOB 2: DXVK Master ARM64EC
   # ==================================================================
   build-dxvk-arm64ec:
-    name: Build DXVK 2.7.1 ARM64EC (${{ matrix.type }})
+    name: Build DXVK Nightly ARM64EC (${{ matrix.type }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -123,21 +125,21 @@ jobs:
         run: |
           git clone --recursive https://github.com/doitsujin/dxvk.git dxvk
           cd dxvk
-          git checkout v2.7.1
+          COMMIT_HASH=$(git rev-parse --short HEAD)
           
           if [ "${{ matrix.type }}" == "async" ]; then
-            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-2.7.1-1.patch
-            git apply dxvk-gplasync-2.7.1-1.patch
-            echo "VERSION_NAME=2.7.1-async-arm64ec" >> $GITHUB_ENV
-            echo "DESC_TEXT=DXVK 2.7.1 ARM64EC (Async)" >> $GITHUB_ENV
+            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch
+            git apply dxvk-gplasync-master.patch
+            echo "VERSION_NAME=nightly-async-arm64ec-${COMMIT_HASH}" >> $GITHUB_ENV
+            echo "DESC_TEXT=DXVK Nightly ARM64EC (Async)" >> $GITHUB_ENV
           elif [ "${{ matrix.type }}" == "gplasync" ]; then
-            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-2.7.1-1.patch
-            git apply dxvk-gplasync-2.7.1-1.patch
-            echo "VERSION_NAME=2.7.1-gplasync-arm64ec" >> $GITHUB_ENV
-            echo "DESC_TEXT=DXVK 2.7.1 ARM64EC (GPLAsync)" >> $GITHUB_ENV
+            wget -q https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch
+            git apply dxvk-gplasync-master.patch
+            echo "VERSION_NAME=nightly-gplasync-arm64ec-${COMMIT_HASH}" >> $GITHUB_ENV
+            echo "DESC_TEXT=DXVK Nightly ARM64EC (GPLAsync)" >> $GITHUB_ENV
           else
-            echo "VERSION_NAME=2.7.1-standard-arm64ec" >> $GITHUB_ENV
-            echo "DESC_TEXT=DXVK 2.7.1 ARM64EC (Standard)" >> $GITHUB_ENV
+            echo "VERSION_NAME=nightly-standard-arm64ec-${COMMIT_HASH}" >> $GITHUB_ENV
+            echo "DESC_TEXT=DXVK Nightly ARM64EC (Standard)" >> $GITHUB_ENV
           fi
           cd ..
 
@@ -254,8 +256,8 @@ jobs:
         run: |
           TIMESTAMP=$(date +'%Y%m%d-%H%M%S')
           READABLE_DATE=$(date +'%Y-%m-%d %H:%M:%S UTC')
-          echo "TAG_NAME=dxvk-2.7.1-nightly-$TIMESTAMP" >> $GITHUB_ENV
-          echo "RELEASE_NAME=DXVK 2.7.1 Builds - $READABLE_DATE" >> $GITHUB_ENV
+          echo "TAG_NAME=dxvk-nightly-$TIMESTAMP" >> $GITHUB_ENV
+          echo "RELEASE_NAME=DXVK Nightly Builds - $READABLE_DATE" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -265,19 +267,17 @@ jobs:
           prerelease: true
           make_latest: false
           body: |
-            ### 🚀 DXVK 2.7.1 Builds
+            ### 🚀 DXVK Nightly Builds (Master)
             
-            This release contains 6 targeted builds of DXVK v2.7.1:
-            1. **DXVK 2.7.1 (Standard)**
-            2. **DXVK 2.7.1 (Async)**
-            3. **DXVK 2.7.1 (GPLAsync)**
-            4. **DXVK 2.7.1 ARM64EC (Standard)**
-            5. **DXVK 2.7.1 ARM64EC (Async)**
-            6. **DXVK 2.7.1 ARM64EC (GPLAsync)**
+            This release contains 6 bleeding-edge nightly builds straight from the DXVK master branch:
+            1. **DXVK Nightly (Standard)**
+            2. **DXVK Nightly (Async)**
+            3. **DXVK Nightly (GPLAsync)**
+            4. **DXVK Nightly ARM64EC (Standard)**
+            5. **DXVK Nightly ARM64EC (Async)**
+            6. **DXVK Nightly ARM64EC (GPLAsync)**
             
             Packaged and ready for Winlator (`.wcp` and `.zip`).
-            
-            *Note: As of DXVK 2.7, upstream removed the state cache that `gplAsyncCache` relied on. Therefore, both the "Async" and "GPLAsync" variants here use the exact same updated GPLAsync patch from Ph42oN, but they are built and labeled distinctively to easily slot into your launcher configurations.*
           files: |
             ./artifacts/*.wcp
             ./artifacts/*.zip
