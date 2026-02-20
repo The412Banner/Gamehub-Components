@@ -2,8 +2,8 @@ name: DXVK Nightly Builds (Latest Master)
 
 on:
   workflow_dispatch:
-  # schedule:
-  #   - cron: '0 9 * * *' # Uncomment to run automatically every day at 9 AM UTC
+  schedule:
+    - cron: '30 8 * * *' # Runs automatically every day at 8:30 AM UTC (3:30 AM EST)
 
 jobs:
   # ==================================================================
@@ -64,18 +64,48 @@ jobs:
             "type": "DXVK",
             "versionName": "${{ env.VERSION_NAME }}",
             "versionCode": 0,
-            "description": "${{ env.DESC_TEXT }}",
+            "description": "Banners Repo (Upstream: Philip Rebohle)",
             "files": [
-              { "source": "system32/d3d10core.dll", "target": "\${system32}/d3d10core.dll" },
-              { "source": "system32/d3d11.dll", "target": "\${system32}/d3d11.dll" },
-              { "source": "system32/d3d8.dll", "target": "\${system32}/d3d8.dll" },
-              { "source": "system32/d3d9.dll", "target": "\${system32}/d3d9.dll" },
-              { "source": "system32/dxgi.dll", "target": "\${system32}/dxgi.dll" },
-              { "source": "syswow64/d3d10core.dll", "target": "\${syswow64}/d3d10core.dll" },
-              { "source": "syswow64/d3d11.dll", "target": "\${syswow64}/d3d11.dll" },
-              { "source": "syswow64/d3d8.dll", "target": "\${syswow64}/d3d8.dll" },
-              { "source": "syswow64/d3d9.dll", "target": "\${syswow64}/d3d9.dll" },
-              { "source": "syswow64/dxgi.dll", "target": "\${syswow64}/dxgi.dll" }
+              {
+                "source": "system32/d3d10core.dll",
+                "target": "\${system32}/d3d10core.dll"
+              },
+              {
+                "source": "system32/d3d11.dll",
+                "target": "\${system32}/d3d11.dll"
+              },
+              {
+                "source": "system32/d3d8.dll",
+                "target": "\${system32}/d3d8.dll"
+              },
+              {
+                "source": "system32/d3d9.dll",
+                "target": "\${system32}/d3d9.dll"
+              },
+              {
+                "source": "system32/dxgi.dll",
+                "target": "\${system32}/dxgi.dll"
+              },
+              {
+                "source": "syswow64/d3d10core.dll",
+                "target": "\${syswow64}/d3d10core.dll"
+              },
+              {
+                "source": "syswow64/d3d11.dll",
+                "target": "\${syswow64}/d3d11.dll"
+              },
+              {
+                "source": "syswow64/d3d8.dll",
+                "target": "\${syswow64}/d3d8.dll"
+              },
+              {
+                "source": "syswow64/d3d9.dll",
+                "target": "\${syswow64}/d3d9.dll"
+              },
+              {
+                "source": "syswow64/dxgi.dll",
+                "target": "\${syswow64}/dxgi.dll"
+              }
             ]
           }
           EOF
@@ -208,18 +238,48 @@ jobs:
             "type": "DXVK",
             "versionName": "${{ env.VERSION_NAME }}",
             "versionCode": 0,
-            "description": "${{ env.DESC_TEXT }}",
+            "description": "Banners Repo (Upstream: Philip Rebohle)",
             "files": [
-              { "source": "system32/d3d10core.dll", "target": "\${system32}/d3d10core.dll" },
-              { "source": "system32/d3d11.dll", "target": "\${system32}/d3d11.dll" },
-              { "source": "system32/d3d8.dll", "target": "\${system32}/d3d8.dll" },
-              { "source": "system32/d3d9.dll", "target": "\${system32}/d3d9.dll" },
-              { "source": "system32/dxgi.dll", "target": "\${system32}/dxgi.dll" },
-              { "source": "syswow64/d3d10core.dll", "target": "\${syswow64}/d3d10core.dll" },
-              { "source": "syswow64/d3d11.dll", "target": "\${syswow64}/d3d11.dll" },
-              { "source": "syswow64/d3d8.dll", "target": "\${syswow64}/d3d8.dll" },
-              { "source": "syswow64/d3d9.dll", "target": "\${syswow64}/d3d9.dll" },
-              { "source": "syswow64/dxgi.dll", "target": "\${syswow64}/dxgi.dll" }
+              {
+                "source": "system32/d3d10core.dll",
+                "target": "\${system32}/d3d10core.dll"
+              },
+              {
+                "source": "system32/d3d11.dll",
+                "target": "\${system32}/d3d11.dll"
+              },
+              {
+                "source": "system32/d3d8.dll",
+                "target": "\${system32}/d3d8.dll"
+              },
+              {
+                "source": "system32/d3d9.dll",
+                "target": "\${system32}/d3d9.dll"
+              },
+              {
+                "source": "system32/dxgi.dll",
+                "target": "\${system32}/dxgi.dll"
+              },
+              {
+                "source": "syswow64/d3d10core.dll",
+                "target": "\${syswow64}/d3d10core.dll"
+              },
+              {
+                "source": "syswow64/d3d11.dll",
+                "target": "\${syswow64}/d3d11.dll"
+              },
+              {
+                "source": "syswow64/d3d8.dll",
+                "target": "\${syswow64}/d3d8.dll"
+              },
+              {
+                "source": "syswow64/d3d9.dll",
+                "target": "\${syswow64}/d3d9.dll"
+              },
+              {
+                "source": "syswow64/dxgi.dll",
+                "target": "\${syswow64}/dxgi.dll"
+              }
             ]
           }
           EOF
@@ -264,8 +324,8 @@ jobs:
         with:
           tag_name: ${{ env.TAG_NAME }}
           name: ${{ env.RELEASE_NAME }}
-          prerelease: true
-          make_latest: false
+          prerelease: false
+          make_latest: true
           body: |
             ### 🚀 DXVK Nightly Builds (Master)
             
