@@ -13,7 +13,7 @@ jobs:
     name: Build Box64 ${{ matrix.source }} (${{ matrix.type }})
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false # Prevents cancelling all builds if one fails
+      fail-fast: false
       matrix:
         type: [Native, Bionic, WOW64]
         source: [Official, Hybrid]
@@ -25,11 +25,34 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git cmake make python3 p7zip-full wget tar file unzip xz-utils zip
 
+      # --- CACHE BLOCKS ---
+      - name: Cache Android NDK
+        if: matrix.type != 'WOW64'
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/android-ndk-r26b
+          key: android-ndk-r26b-linux
+
+      - name: Cache LLVM-MinGW (WOW64)
+        if: matrix.type == 'WOW64'
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/llvm-mingw-20240619-ucrt-ubuntu-20.04-x86_64
+          key: llvm-mingw-20240619
+      # --------------------
+
       - name: Setup Toolchain (Android)
         if: matrix.type != 'WOW64'
         run: |
-          wget -q https://dl.google.com/android/repository/android-ndk-r26b-linux.zip
-          unzip -q android-ndk-r26b-linux.zip
+          # Only download if the cache didn't load the folder
+          if [ ! -d "$PWD/android-ndk-r26b" ]; then
+            echo "Cache miss: Downloading NDK..."
+            wget -q https://dl.google.com/android/repository/android-ndk-r26b-linux.zip
+            unzip -q android-ndk-r26b-linux.zip
+          else
+            echo "Cache hit: NDK found!"
+          fi
+          
           echo "ANDROID_NDK_HOME=$PWD/android-ndk-r26b" >> $GITHUB_ENV
           if [ "${{ matrix.type }}" == "Bionic" ]; then
             echo "BOX64_COMPILER=$PWD/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android31-clang" >> $GITHUB_ENV
@@ -41,8 +64,15 @@ jobs:
         if: matrix.type == 'WOW64'
         run: |
           LLVM_MINGW_VERSION=20240619
-          wget -q https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64.tar.xz
-          tar -xf llvm-mingw-*.tar.xz
+          # Only download if the cache didn't load the folder
+          if [ ! -d "$PWD/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64" ]; then
+            echo "Cache miss: Downloading LLVM-MinGW..."
+            wget -q https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64.tar.xz
+            tar -xf llvm-mingw-*.tar.xz
+          else
+            echo "Cache hit: LLVM-MinGW found!"
+          fi
+          
           echo "MINGW_PATH=$PWD/$(ls -d llvm-mingw-* | head -n 1)/bin" >> $GITHUB_ENV
 
       - name: Clone & Merge Source
@@ -50,7 +80,6 @@ jobs:
           git clone https://github.com/ptitSeb/box64 source
           cd source
           
-          # Handle Pipetto Merge for Hybrid
           if [ "${{ matrix.source }}" == "Hybrid" ]; then
             git remote add pipetto https://github.com/Pipetto-crypto/box64
             git fetch pipetto
@@ -59,7 +88,6 @@ jobs:
             git merge pipetto/main --no-edit || { echo "MERGE FAILED"; exit 1; }
           fi
           
-          # Handle MinGW Patch for WOW64
           if [ "${{ matrix.type }}" == "WOW64" ]; then
             mkdir -p wine/common
             echo -e '\nint __mingw_vsprintf(char* buffer, const char* format, va_list args) { return vsprintf(buffer, format, args); }' >> wine/common/crt.c
@@ -111,7 +139,7 @@ jobs:
 
       - name: Package
         run: |
-          mkdir -p dist
+          mkdir -p $GITHUB_WORKSPACE/dist
           
           if [ "${{ matrix.type }}" == "WOW64" ]; then
             cd build/wowbox64-prefix/src/wowbox64-build
@@ -121,8 +149,7 @@ jobs:
             tar -cJf "${{ env.FULL_VERSION }}.wcp" system32 profile.json
             zip -r "${{ env.FULL_VERSION }}.zip" system32 profile.json
             
-            # Move up 5 directories to the workspace root dist folder
-            mv *.wcp *.zip ../../../../../dist/
+            mv *.wcp *.zip $GITHUB_WORKSPACE/dist/
           else
             cd build
             echo '{"type": "Box64", "versionName": "${{ env.FULL_VERSION }}", "versionCode": 0, "description": "Box64 ${{ matrix.source }} ${{ matrix.type }}", "files": [{"source": "box64", "target": "${bindir}/box64"}]}' > profile.json
@@ -136,8 +163,7 @@ jobs:
             cd ..
             xz -9 -c temp.tar > "${{ env.FULL_VERSION }}.wcp"
             
-            # Move up 1 directory to the workspace root dist folder
-            mv *.wcp *.zip ../dist/
+            mv *.wcp *.zip $GITHUB_WORKSPACE/dist/
           fi
 
       - uses: actions/upload-artifact@v4
