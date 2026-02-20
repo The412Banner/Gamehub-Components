@@ -123,11 +123,13 @@ jobs:
     steps:
       - name: Install Dependencies
         run: sudo apt-get update && sudo apt-get install -y ca-certificates curl xz-utils jq git zip build-essential python3 pkg-config cmake zstd dos2unix perl tar unzip meson ninja-build wget
+      
       - name: Setup Toolchain
         run: |
           wget -q "https://github.com/mstorsjo/llvm-mingw/releases/download/20251104/llvm-mingw-20251104-ucrt-ubuntu-22.04-x86_64.tar.xz" -O llvm.tar.xz
           sudo mkdir -p /opt/llvm-mingw && sudo tar -C /opt/llvm-mingw --strip-components=1 -xJf llvm.tar.xz
           echo "/opt/llvm-mingw/bin" >> $GITHUB_PATH
+      
       - name: Build FEX
         run: |
           git clone --recursive https://github.com/FEX-Emu/FEX.git source
@@ -135,14 +137,18 @@ jobs:
           mkdir build && cd build
           cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=../Data/CMake/toolchain_mingw.cmake -DMINGW_TRIPLE="aarch64-w64-mingw32" ..
           ninja -j$(nproc)
+      
       - name: Package
         run: |
           mkdir pkg && find . -name "*.dll" -exec cp {} pkg/ \;
           cd pkg && zip -r ../FEX-Nightly.zip . && tar -cJf ../FEX-Nightly.wcp .
+      
       - uses: actions/upload-artifact@v4
         with:
           name: fex-nightly
-          path: "*.zip *.wcp"
+          path: |
+            *.zip
+            *.wcp
 
   # ==================================================================
   # JOB 3: VKD3D-Proton Matrix (Standard & ARM64EC)
@@ -156,31 +162,59 @@ jobs:
     steps:
       - name: Install Deps
         run: sudo apt-get update && sudo apt-get install -y git meson ninja-build wget unzip zip python3
+      
       - name: Setup LLVM-MinGW
         run: |
           wget -q "https://github.com/mstorsjo/llvm-mingw/releases/download/20251104/llvm-mingw-20251104-ucrt-ubuntu-22.04-x86_64.tar.xz" -O llvm.tar.xz
           sudo mkdir -p /opt/llvm-mingw && sudo tar -C /opt/llvm-mingw --strip-components=1 -xJf llvm.tar.xz
           echo "/opt/llvm-mingw/bin" >> $GITHUB_PATH
+      
       - name: Build
         run: |
           git clone --recursive https://github.com/HansKristian-Work/vkd3d-proton src
           cd src
           if [ "${{ matrix.arch }}" == "x64" ]; then
-            echo -e "[binaries]\nc = 'x86_64-w64-mingw32-clang'\ncpp = 'x86_64-w64-mingw32-clang++'\nar = 'llvm-ar'\nstrip = 'llvm-strip'\n[host_machine]\nsystem = 'windows'\ncpu_family = 'x86_64'\ncpu = 'x86_64'\nendian = 'little'" > ../cross.txt
+            cat <<EOF > ../cross.txt
+          [binaries]
+          c = 'x86_64-w64-mingw32-clang'
+          cpp = 'x86_64-w64-mingw32-clang++'
+          ar = 'llvm-ar'
+          strip = 'llvm-strip'
+          [host_machine]
+          system = 'windows'
+          cpu_family = 'x86_64'
+          cpu = 'x86_64'
+          endian = 'little'
+          EOF
           else
-            echo -e "[binaries]\nc = 'arm64ec-w64-mingw32-clang'\ncpp = 'arm64ec-w64-mingw32-clang++'\nar = 'llvm-ar'\nstrip = 'llvm-strip'\n[host_machine]\nsystem = 'windows'\ncpu_family = 'aarch64'\ncpu = 'aarch64'\nendian = 'little'" > ../cross.txt
+            cat <<EOF > ../cross.txt
+          [binaries]
+          c = 'arm64ec-w64-mingw32-clang'
+          cpp = 'arm64ec-w64-mingw32-clang++'
+          ar = 'llvm-ar'
+          strip = 'llvm-strip'
+          [host_machine]
+          system = 'windows'
+          cpu_family = 'aarch64'
+          cpu = 'aarch64'
+          endian = 'little'
+          EOF
           fi
           meson setup build --cross-file ../cross.txt -Dbuildtype=release
           ninja -C build
+      
       - name: Package
         run: |
           mkdir -p dist/system32
           find src/build -name "*.dll" -exec cp {} dist/system32/ \;
           cd dist && zip -r ../vkd3d-${{ matrix.arch }}.zip . && tar -cJf ../vkd3d-${{ matrix.arch }}.wcp .
+      
       - uses: actions/upload-artifact@v4
         with:
           name: vkd3d-${{ matrix.arch }}
-          path: "*.zip *.wcp"
+          path: |
+            *.zip
+            *.wcp
 
   # ==================================================================
   # JOB 4: DXVK Standard Matrix (Vanilla, Async, GPLAsync)
@@ -194,40 +228,76 @@ jobs:
         variant: [Vanilla, Async, GPLAsync]
     steps:
       - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y mingw-w64 wget git xz-utils python3 meson ninja-build build-essential unzip zip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64 wget git xz-utils python3 meson ninja-build build-essential unzip zip
+
       - name: Setup GLSLANG
         run: |
           wget -q https://github.com/KhronosGroup/glslang/releases/download/master-tot/glslang-master-linux-Release.zip
           unzip -q glslang-master-linux-Release.zip -d glslang
           echo "$PWD/glslang/bin" >> $GITHUB_PATH
+
       - name: Clone & Patch
         run: |
           git clone --recursive https://github.com/doitsujin/dxvk.git dxvk
           cd dxvk
           LATEST_TAG=$(git describe --tags --abbrev=0)
           COMMIT=$(git rev-parse --short HEAD)
+          
           if [ "${{ matrix.variant }}" == "GPLAsync" ]; then
             wget https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch
             git apply dxvk-gplasync-master.patch
+          elif [ "${{ matrix.variant }}" == "Async" ]; then
+            # NOTE: Add your specific Async patch URL below if you have one for 2.7.1
+            echo "Async selected, skipping patch download until URL is provided"
           fi
+          
           echo "VERSION_NAME=${LATEST_TAG}-${{ matrix.variant }}-$COMMIT" >> $GITHUB_ENV
+
       - name: Build
         run: |
           cd dxvk
+          sed -i 's/ninja/ninja -j 2/g' package-release.sh
           ./package-release.sh master ../built --no-package
+
       - name: Package
         run: |
-          mkdir -p pkg/system32 pkg/syswow64
-          cp -r built/dxvk-master/x64/* pkg/system32/
-          cp -r built/dxvk-master/x32/* pkg/syswow64/
-          echo '{"type": "DXVK"}' > pkg/profile.json
-          cd pkg
-          zip -r ../DXVK-Std-${{ env.VERSION_NAME }}.zip .
+          mkdir -p packaging/system32 packaging/syswow64
+          cp -r built/dxvk-master/x64/* packaging/system32/
+          cp -r built/dxvk-master/x32/* packaging/syswow64/
+          
+          cat <<EOF > packaging/profile.json
+          {
+            "type": "DXVK",
+            "versionName": "${{ env.VERSION_NAME }}",
+            "versionCode": 0,
+            "description": "DXVK ${{ matrix.variant }}",
+            "files": [
+              { "source": "system32/d3d10core.dll", "target": "\${system32}/d3d10core.dll" },
+              { "source": "system32/d3d11.dll", "target": "\${system32}/d3d11.dll" },
+              { "source": "system32/d3d8.dll", "target": "\${system32}/d3d8.dll" },
+              { "source": "system32/d3d9.dll", "target": "\${system32}/d3d9.dll" },
+              { "source": "system32/dxgi.dll", "target": "\${system32}/dxgi.dll" },
+              { "source": "syswow64/d3d10core.dll", "target": "\${syswow64}/d3d10core.dll" },
+              { "source": "syswow64/d3d11.dll", "target": "\${syswow64}/d3d11.dll" },
+              { "source": "syswow64/d3d8.dll", "target": "\${syswow64}/d3d8.dll" },
+              { "source": "syswow64/d3d9.dll", "target": "\${syswow64}/d3d9.dll" },
+              { "source": "syswow64/dxgi.dll", "target": "\${syswow64}/dxgi.dll" }
+            ]
+          }
+          EOF
+          
+          cd packaging
           tar -cJf ../DXVK-Std-${{ env.VERSION_NAME }}.wcp .
+          zip -r ../DXVK-Std-${{ env.VERSION_NAME }}.zip .
+
       - uses: actions/upload-artifact@v4
         with:
           name: dxvk-std-${{ matrix.variant }}
-          path: "*.zip *.wcp"
+          path: |
+            *.zip
+            *.wcp
 
   # ==================================================================
   # JOB 5: DXVK ARM64EC Matrix (Vanilla, Async, GPLAsync)
@@ -241,42 +311,136 @@ jobs:
         variant: [Vanilla, Async, GPLAsync]
     steps:
       - uses: actions/checkout@v4
-      - name: Install Deps
-        run: sudo apt-get update && sudo apt-get install -y ca-certificates curl xz-utils jq git build-essential python3 pkg-config zstd meson ninja-build wget unzip zip
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates curl xz-utils jq git build-essential python3 pkg-config zstd meson ninja-build wget unzip zip
+
+      - name: Setup GLSLANG
+        run: |
+          wget -q https://github.com/KhronosGroup/glslang/releases/download/master-tot/glslang-master-linux-Release.zip
+          unzip -q glslang-master-linux-Release.zip -d glslang
+          echo "$PWD/glslang/bin" >> $GITHUB_PATH
+
       - name: Setup LLVM-MinGW
         run: |
-          wget -q "https://github.com/mstorsjo/llvm-mingw/releases/download/20251104/llvm-mingw-20251104-ucrt-ubuntu-22.04-x86_64.tar.xz" -O llvm.tar.xz
+          LLVM_MINGW_TAG="20251104"
+          wget -q "https://github.com/mstorsjo/llvm-mingw/releases/download/$LLVM_MINGW_TAG/llvm-mingw-$LLVM_MINGW_TAG-ucrt-ubuntu-22.04-x86_64.tar.xz" -O llvm.tar.xz
           tar -xf llvm.tar.xz
-          echo "$PWD/llvm-mingw-20251104-ucrt-ubuntu-22.04-x86_64/bin" >> $GITHUB_PATH
+          echo "$PWD/llvm-mingw-$LLVM_MINGW_TAG-ucrt-ubuntu-22.04-x86_64/bin" >> $GITHUB_PATH
+
       - name: Clone & Patch
         run: |
           git clone --recursive https://github.com/doitsujin/dxvk.git dxvk
           cd dxvk
           LATEST_TAG=$(git describe --tags --abbrev=0)
           COMMIT=$(git rev-parse --short HEAD)
+          
           if [ "${{ matrix.variant }}" == "GPLAsync" ]; then
             wget https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch
             git apply dxvk-gplasync-master.patch
+          elif [ "${{ matrix.variant }}" == "Async" ]; then
+            # NOTE: Add your specific Async patch URL below if you have one for 2.7.1
+            echo "Async selected, skipping patch download until URL is provided"
           fi
+          
           echo "VERSION_NAME=${LATEST_TAG}-${{ matrix.variant }}-arm64ec-$COMMIT" >> $GITHUB_ENV
+
+      - name: Configure Cross-Files
+        run: |
+          cat <<EOF > arm64ec.txt
+          [binaries]
+          c = 'arm64ec-w64-mingw32-clang'
+          cpp = 'arm64ec-w64-mingw32-clang++'
+          ar = 'llvm-ar'
+          strip = 'llvm-strip'
+          windres = 'arm64ec-w64-mingw32-windres'
+          widl = 'arm64ec-w64-mingw32-widl'
+          pkg-config = 'pkg-config'
+          [host_machine]
+          system = 'windows'
+          cpu_family = 'aarch64'
+          cpu = 'aarch64'
+          endian = 'little'
+          EOF
+
+          cat <<EOF > x86.txt
+          [binaries]
+          c = 'i686-w64-mingw32-clang'
+          cpp = 'i686-w64-mingw32-clang++'
+          ar = 'llvm-ar'
+          strip = 'llvm-strip'
+          windres = 'i686-w64-mingw32-windres'
+          widl = 'i686-w64-mingw32-widl'
+          pkg-config = 'pkg-config'
+          [host_machine]
+          system = 'windows'
+          cpu_family = 'x86'
+          cpu = 'i686'
+          endian = 'little'
+          EOF
+
       - name: Build
         run: |
           cd dxvk
-          echo -e "[binaries]\nc = 'arm64ec-w64-mingw32-clang'\ncpp = 'arm64ec-w64-mingw32-clang++'\nar = 'llvm-ar'\nstrip = 'llvm-strip'\n[host_machine]\nsystem = 'windows'\ncpu_family = 'aarch64'\ncpu = 'aarch64'\nendian = 'little'" > ../arm64ec.txt
-          meson setup build-ec --cross-file ../arm64ec.txt -Dbuildtype=release
-          ninja -C build-ec
+          meson setup build-ec --cross-file ../arm64ec.txt -Dbuildtype=release -Dstrip=true
+          meson setup build-x86 --cross-file ../x86.txt -Dbuildtype=release -Dstrip=true
+          ninja -C build-ec -j 2
+          ninja -C build-x86 -j 2
+
       - name: Package
         run: |
-          mkdir -p pkg/system32
-          find dxvk/build-ec -name "*.dll" -exec cp {} pkg/system32/ \;
-          echo '{"type": "DXVK"}' > pkg/profile.json
-          cd pkg
+          mkdir -p packaging/system32
+          mkdir -p packaging/syswow64
+          
+          copy_dll() {
+            SRC_DIR=$1
+            DEST_DIR=$2
+            cp "dxvk/$SRC_DIR/src/d3d11/d3d11.dll" "$DEST_DIR/"
+            cp "dxvk/$SRC_DIR/src/d3d10/d3d10core.dll" "$DEST_DIR/"
+            cp "dxvk/$SRC_DIR/src/d3d9/d3d9.dll" "$DEST_DIR/"
+            cp "dxvk/$SRC_DIR/src/d3d8/d3d8.dll" "$DEST_DIR/" || true 
+            cp "dxvk/$SRC_DIR/src/dxgi/dxgi.dll" "$DEST_DIR/"
+          }
+          
+          copy_dll "build-ec" "packaging/system32"
+          copy_dll "build-x86" "packaging/syswow64"
+          
+          llvm-strip --strip-all packaging/system32/*.dll
+          llvm-strip --strip-all packaging/syswow64/*.dll
+
+          cat <<EOF > packaging/profile.json
+          {
+            "type": "DXVK",
+            "versionName": "${{ env.VERSION_NAME }}",
+            "versionCode": 0,
+            "description": "DXVK ARM64EC ${{ matrix.variant }}",
+            "files": [
+              { "source": "system32/d3d10core.dll", "target": "\${system32}/d3d10core.dll" },
+              { "source": "system32/d3d11.dll", "target": "\${system32}/d3d11.dll" },
+              { "source": "system32/d3d8.dll", "target": "\${system32}/d3d8.dll" },
+              { "source": "system32/d3d9.dll", "target": "\${system32}/d3d9.dll" },
+              { "source": "system32/dxgi.dll", "target": "\${system32}/dxgi.dll" },
+              { "source": "syswow64/d3d10core.dll", "target": "\${syswow64}/d3d10core.dll" },
+              { "source": "syswow64/d3d11.dll", "target": "\${syswow64}/d3d11.dll" },
+              { "source": "syswow64/d3d8.dll", "target": "\${syswow64}/d3d8.dll" },
+              { "source": "syswow64/d3d9.dll", "target": "\${syswow64}/d3d9.dll" },
+              { "source": "syswow64/dxgi.dll", "target": "\${syswow64}/dxgi.dll" }
+            ]
+          }
+          EOF
+          
+          cd packaging
+          tar --zstd -cf ../DXVK-ARM64EC-${{ env.VERSION_NAME }}.wcp .
           zip -r ../DXVK-ARM64EC-${{ env.VERSION_NAME }}.zip .
-          tar -cJf ../DXVK-ARM64EC-${{ env.VERSION_NAME }}.wcp .
+
       - uses: actions/upload-artifact@v4
         with:
           name: dxvk-arm64ec-${{ matrix.variant }}
-          path: "*.zip *.wcp"
+          path: |
+            *.zip
+            *.wcp
 
   # ==================================================================
   # JOB 6: DXVK-NVAPI
@@ -285,16 +449,45 @@ jobs:
     name: Build DXVK-NVAPI
     runs-on: ubuntu-latest
     steps:
+      - name: Install Dependencies
+        run: sudo apt-get update && sudo apt-get install -y git meson ninja-build python3 pkg-config wget unzip zip
+      
+      - name: Setup LLVM-MinGW
+        run: |
+          wget -q "https://github.com/mstorsjo/llvm-mingw/releases/download/20251104/llvm-mingw-20251104-ucrt-ubuntu-22.04-x86_64.tar.xz" -O llvm.tar.xz
+          sudo mkdir -p /opt/llvm-mingw && sudo tar -C /opt/llvm-mingw --strip-components=1 -xJf llvm.tar.xz
+          echo "/opt/llvm-mingw/bin" >> $GITHUB_PATH
+          
       - name: Build & Package
         run: |
           git clone --recursive https://github.com/jp7677/dxvk-nvapi.git src
+          cd src
+          cat <<EOF > ../cross.txt
+          [binaries]
+          c = 'x86_64-w64-mingw32-clang'
+          cpp = 'x86_64-w64-mingw32-clang++'
+          ar = 'llvm-ar'
+          strip = 'llvm-strip'
+          [host_machine]
+          system = 'windows'
+          cpu_family = 'x86_64'
+          cpu = 'x86_64'
+          endian = 'little'
+          EOF
+          meson setup build --cross-file ../cross.txt -Dbuildtype=release
+          ninja -C build
+          cd ..
           mkdir pkg
+          find src/build -name "*.dll" -exec cp {} pkg/ \;
           echo '{"type": "NVAPI"}' > pkg/profile.json
           cd pkg && zip -r ../nvapi.zip . && tar -cJf ../nvapi.wcp .
+          
       - uses: actions/upload-artifact@v4
         with:
           name: dxvk-nvapi
-          path: "*.zip *.wcp"
+          path: |
+            *.zip
+            *.wcp
 
   # ==================================================================
   # JOB 7: Create Combined Nightly Release
@@ -325,7 +518,7 @@ jobs:
           prerelease: true
           body: |
             ### 🚀 Nightly Summary
-            This release contains the latest builds for all components.
+            This release contains the latest automated builds for all components.
             
             - **Box64**: Official & Hybrid Variants
             - **FEXCore**: Nightly Build
