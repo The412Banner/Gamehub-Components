@@ -44,7 +44,6 @@ jobs:
       - name: Setup Toolchain (Android)
         if: matrix.type != 'WOW64'
         run: |
-          # Only download if the cache didn't load the folder
           if [ ! -d "$PWD/android-ndk-r26b" ]; then
             echo "Cache miss: Downloading NDK..."
             wget -q https://dl.google.com/android/repository/android-ndk-r26b-linux.zip
@@ -64,7 +63,6 @@ jobs:
         if: matrix.type == 'WOW64'
         run: |
           LLVM_MINGW_VERSION=20240619
-          # Only download if the cache didn't load the folder
           if [ ! -d "$PWD/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64" ]; then
             echo "Cache miss: Downloading LLVM-MinGW..."
             wget -q https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64.tar.xz
@@ -753,12 +751,132 @@ jobs:
             *.zip
 
   # ==================================================================
-  # JOB 7: Release
+  # JOB 7: DXVK-NVAPI
+  # ==================================================================
+  build-dxvk-nvapi:
+    name: Build DXVK-NVAPI
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      commit: ${{ steps.version.outputs.commit }}
+    steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
+            ca-certificates curl xz-utils jq git zip \
+            build-essential python3 pkg-config zstd \
+            meson ninja-build wget unzip
+
+      # Reuse the same cache from the WOW64 block to speed this up
+      - name: Cache LLVM-MinGW
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/llvm-mingw-20240619-ucrt-ubuntu-20.04-x86_64
+          key: llvm-mingw-20240619
+
+      - name: Setup Toolchain
+        run: |
+          LLVM_MINGW_VERSION=20240619
+          if [ ! -d "$PWD/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64" ]; then
+            echo "Cache miss: Downloading LLVM-MinGW..."
+            wget -q https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64.tar.xz
+            tar -xf llvm-mingw-*.tar.xz
+          fi
+          echo "$PWD/$(ls -d llvm-mingw-* | head -n 1)/bin" >> $GITHUB_PATH
+
+      - name: Build DXVK-NVAPI
+        id: version
+        run: |
+          git clone --recursive https://github.com/jp7677/dxvk-nvapi.git src
+          cd src
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          VERSION_NAME="dxvk-nvapi-${COMMIT_HASH}"
+          echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
+          echo "version=${VERSION_NAME}" >> $GITHUB_OUTPUT
+          echo "commit=${COMMIT_HASH}" >> $GITHUB_OUTPUT
+          cd ..
+          
+          cat <<EOF > cross-x64.txt
+          [binaries]
+          c = 'x86_64-w64-mingw32-clang'
+          cpp = 'x86_64-w64-mingw32-clang++'
+          ar = 'llvm-ar'
+          strip = 'llvm-strip'
+          windres = 'x86_64-w64-mingw32-windres'
+          widl = 'x86_64-w64-mingw32-widl'
+          pkg-config = 'pkg-config'
+          [host_machine]
+          system = 'windows'
+          cpu_family = 'x86_64'
+          cpu = 'x86_64'
+          endian = 'little'
+          EOF
+
+          cat <<EOF > cross-x86.txt
+          [binaries]
+          c = 'i686-w64-mingw32-clang'
+          cpp = 'i686-w64-mingw32-clang++'
+          ar = 'llvm-ar'
+          strip = 'llvm-strip'
+          windres = 'i686-w64-mingw32-windres'
+          widl = 'i686-w64-mingw32-widl'
+          pkg-config = 'pkg-config'
+          [host_machine]
+          system = 'windows'
+          cpu_family = 'x86'
+          cpu = 'i686'
+          endian = 'little'
+          EOF
+
+          cd src
+          meson setup build-x64 --cross-file ../cross-x64.txt -Dbuildtype=release -Dstrip=true
+          ninja -C build-x64 -j 2
+          meson setup build-x86 --cross-file ../cross-x86.txt -Dbuildtype=release -Dstrip=true
+          ninja -C build-x86 -j 2
+
+      - name: Package
+        run: |
+          rm -rf final_package && mkdir -p final_package/system32 final_package/syswow64
+          
+          find src/build-x64 -name "nvapi64.dll" -exec cp -L {} final_package/system32/ \;
+          find src/build-x86 -name "nvapi.dll" -exec cp -L {} final_package/syswow64/ \;
+          
+          cat <<EOF > final_package/profile.json
+          {
+            "type": "DXVK-NVAPI",
+            "versionName": "${{ env.VERSION_NAME }}",
+            "versionCode": 1,
+            "description": "DXVK-NVAPI\n${{ steps.version.outputs.commit }}",
+            "files": [
+              {"source": "system32/nvapi64.dll", "target": "\${system32}/nvapi64.dll"},
+              {"source": "syswow64/nvapi.dll", "target": "\${syswow64}/nvapi.dll"}
+            ]
+          }
+          EOF
+          
+          cd final_package
+          
+          # Create WCP
+          tar -cJf ../${{ env.VERSION_NAME }}.wcp *
+          
+          # Create ZIP
+          zip -r ../${{ env.VERSION_NAME }}.zip *
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dxvk-nvapi
+          path: |
+            *.wcp
+            *.zip
+
+    # ==================================================================
+  # JOB 8: Release
   # ==================================================================
   create-release:
     name: Create Nightly Release
     runs-on: ubuntu-latest
-    needs: [build-box64-matrix, build-fex, build-vkd3d, build-dxvk, build-vkd3d-arm64ec, build-dxvk-arm64ec]
+    needs: [build-box64-matrix, build-fex, build-vkd3d, build-dxvk, build-vkd3d-arm64ec, build-dxvk-arm64ec, build-dxvk-nvapi]
     permissions:
       contents: write
     steps:
@@ -771,6 +889,12 @@ jobs:
       - name: Set Release Tag
         run: echo "TAG_NAME=nightly" >> $GITHUB_ENV
 
+      # This entirely wipes the old release and its files so they don't stack
+      - name: Delete old release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete nightly --cleanup-tag -y || true
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -778,7 +902,6 @@ jobs:
           name: "Emulation Nightly Build"
           prerelease: true
           make_latest: false
-          overwrite: true
           body: |
             ### 🚀 Nightly Build: ${{ env.TAG_NAME }}
             
@@ -791,6 +914,7 @@ jobs:
             | **VKD3D-Proton (ARM64EC)** | [${{ needs.build-vkd3d-arm64ec.outputs.version }}](https://github.com/HansKristian-Work/vkd3d-proton/commit/${{ needs.build-vkd3d-arm64ec.outputs.commit }}) |
             | **DXVK (GPLAsync)** | [${{ needs.build-dxvk.outputs.commit }}](https://github.com/doitsujin/dxvk/commit/${{ needs.build-dxvk.outputs.commit }}) |
             | **DXVK (ARM64EC)** | [${{ needs.build-dxvk-arm64ec.outputs.version }}](https://github.com/doitsujin/dxvk/commit/${{ needs.build-dxvk-arm64ec.outputs.commit }}) |
+            | **DXVK-NVAPI** | [${{ needs.build-dxvk-nvapi.outputs.version }}](https://github.com/jp7677/dxvk-nvapi/commit/${{ needs.build-dxvk-nvapi.outputs.commit }}) |
             
             ### 📦 Files Included
             1. **Box64 Native**: `box64-*.wcp` (and `.zip`)
@@ -804,6 +928,7 @@ jobs:
             9. **VKD3D-Proton (ARM64EC)**: `VKD3D-Proton-3.0b-ARM64EC*.wcp` (and `.zip`)
             10. **DXVK**: `dxvk-gplasync-*.wcp` (and `.zip`)
             11. **DXVK (ARM64EC)**: `DXVK-ARM64EC-*.wcp` (and `.zip`)
+            12. **DXVK-NVAPI**: `dxvk-nvapi-*.wcp` (and `.zip`)
             
             _These files are packaged for use with Winlator._
           files: |
@@ -811,21 +936,3 @@ jobs:
             ./artifacts/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # ==================================================================
-  # JOB 8: Cleanup
-  # ==================================================================
-  cleanup:
-    name: Cleanup Artifacts
-    runs-on: ubuntu-latest
-    needs: create-release
-    steps:
-      - uses: geekyeggo/delete-artifact@v5
-        with:
-          name: |
-            box64-*
-            fex-nightly
-            dxvk-nightly
-            dxvk-arm64ec
-            vkd3d-standard
-            vkd3d-arm64ec
