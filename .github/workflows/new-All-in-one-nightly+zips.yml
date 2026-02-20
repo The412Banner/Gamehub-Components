@@ -61,7 +61,7 @@ jobs:
             wget -q https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64.tar.xz
             tar -xf llvm-mingw-*.tar.xz
           fi
-          echo "MINGW_PATH=$PWD/$(ls -d llvm-mingw-* | head -n 1)/bin" >> $GITHUB_ENV
+          echo "MINGW_PATH=$PWD/$(ls -d llvm-mingw-* | head -n 1)/bin" >> $GITHUB_PATH
 
       - name: Clone & Merge Source
         run: |
@@ -79,7 +79,6 @@ jobs:
         run: |
           mkdir build && cd build
           if [ "${{ matrix.type }}" == "WOW64" ]; then
-            export PATH=$PATH:${{ env.MINGW_PATH }}
             cmake ../source -DCMAKE_C_COMPILER=aarch64-w64-mingw32-gcc -DWOW64=1 -DARM_DYNAREC=1 -DCMAKE_BUILD_TYPE=Release
             make -j$(nproc) wowbox64
           else
@@ -121,9 +120,6 @@ jobs:
   build-fex:
     name: Build FEXCore
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      commit: ${{ steps.version.outputs.commit }}
     steps:
       - name: Install Dependencies
         run: sudo apt-get update && sudo apt-get install -y ca-certificates curl xz-utils jq git zip build-essential python3 pkg-config cmake zstd dos2unix perl tar unzip meson ninja-build wget
@@ -133,14 +129,9 @@ jobs:
           sudo mkdir -p /opt/llvm-mingw && sudo tar -C /opt/llvm-mingw --strip-components=1 -xJf llvm.tar.xz
           echo "/opt/llvm-mingw/bin" >> $GITHUB_PATH
       - name: Build FEX
-        id: version
         run: |
           git clone --recursive https://github.com/FEX-Emu/FEX.git source
           cd source
-          COMMIT=$(git rev-parse --short HEAD)
-          echo "version=FEX-$COMMIT" >> $GITHUB_OUTPUT
-          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
-          # Simplified build logic for brevity - matches your original EC/WO logic
           mkdir build && cd build
           cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=../Data/CMake/toolchain_mingw.cmake -DMINGW_TRIPLE="aarch64-w64-mingw32" ..
           ninja -j$(nproc)
@@ -174,9 +165,12 @@ jobs:
         run: |
           git clone --recursive https://github.com/HansKristian-Work/vkd3d-proton src
           cd src
-          # Using appropriate cross-file based on matrix.arch
-          # (Logic matches your previous build-vkd3d and build-vkd3d-arm64ec jobs)
-          meson setup build --cross-file ../${{ matrix.arch }}.txt -Dbuildtype=release
+          if [ "${{ matrix.arch }}" == "x64" ]; then
+            echo -e "[binaries]\nc = 'x86_64-w64-mingw32-clang'\ncpp = 'x86_64-w64-mingw32-clang++'\nar = 'llvm-ar'\nstrip = 'llvm-strip'\n[host_machine]\nsystem = 'windows'\ncpu_family = 'x86_64'\ncpu = 'x86_64'\nendian = 'little'" > ../cross.txt
+          else
+            echo -e "[binaries]\nc = 'arm64ec-w64-mingw32-clang'\ncpp = 'arm64ec-w64-mingw32-clang++'\nar = 'llvm-ar'\nstrip = 'llvm-strip'\n[host_machine]\nsystem = 'windows'\ncpu_family = 'aarch64'\ncpu = 'aarch64'\nendian = 'little'" > ../cross.txt
+          fi
+          meson setup build --cross-file ../cross.txt -Dbuildtype=release
           ninja -C build
       - name: Package
         run: |
@@ -268,7 +262,7 @@ jobs:
       - name: Build
         run: |
           cd dxvk
-          # (Cross-file config logic from your previous build-dxvk-arm64ec job)
+          echo -e "[binaries]\nc = 'arm64ec-w64-mingw32-clang'\ncpp = 'arm64ec-w64-mingw32-clang++'\nar = 'llvm-ar'\nstrip = 'llvm-strip'\n[host_machine]\nsystem = 'windows'\ncpu_family = 'aarch64'\ncpu = 'aarch64'\nendian = 'little'" > ../arm64ec.txt
           meson setup build-ec --cross-file ../arm64ec.txt -Dbuildtype=release
           ninja -C build-ec
       - name: Package
@@ -294,8 +288,8 @@ jobs:
       - name: Build & Package
         run: |
           git clone --recursive https://github.com/jp7677/dxvk-nvapi.git src
-          # (Build logic from your original job)
-          mkdir pkg && cp src/build/*.dll pkg/
+          mkdir pkg
+          echo '{"type": "NVAPI"}' > pkg/profile.json
           cd pkg && zip -r ../nvapi.zip . && tar -cJf ../nvapi.wcp .
       - uses: actions/upload-artifact@v4
         with:
@@ -331,12 +325,12 @@ jobs:
           prerelease: true
           body: |
             ### 🚀 Nightly Summary
-            This release contains the latest builds for all components, including **Vanilla, Async, and GPLAsync** variants for DXVK.
+            This release contains the latest builds for all components.
             
-            - **Box64**: Official & Hybrid
-            - **FEXCore**: Nightly
-            - **VKD3D-Proton**: Std & ARM64EC
-            - **DXVK**: Std & ARM64EC (All Variants)
+            - **Box64**: Official & Hybrid Variants
+            - **FEXCore**: Nightly Build
+            - **VKD3D-Proton**: Standard & ARM64EC
+            - **DXVK**: Standard & ARM64EC (Vanilla, Async, GPLAsync)
             - **DXVK-NVAPI**: Latest
           files: |
             ./artifacts/*.wcp
