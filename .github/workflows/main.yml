@@ -1,0 +1,37 @@
+name: Generate Box64 Patch
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_repo:
+        description: 'Base Repository'
+        required: true
+        default: 'ptitSeb/box64'
+      base_branch:
+        description: 'Base Branch'
+        required: true
+        default: 'main'
+      head_repo:
+        description: 'Head Repository (Fork with the new commits)'
+        required: true
+        default: 'Pipetto-crypto/box64'
+      head_branch:
+        description: 'Head Branch'
+        required: true
+        default: 'main'
+
+jobs:
+  generate-patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Patch File
+        run: |
+          echo "Fetching patch from ${base_repo} comparing ${head_repo}..."
+          curl -sL "https://github.com/${{ inputs.base_repo }}/compare/${{ inputs.base_branch }}...${{ inputs.head_repo }}:${{ inputs.head_branch }}.patch" > update.patch
+      
+      - name: Upload Patch Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipetto-box64-patch
+          path: update.patch
+          retention-days: 7
