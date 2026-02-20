@@ -736,11 +736,12 @@ jobs:
           }
           EOF
           
+          cd packaging
+          
           # WCP
-          tar --zstd -cf ../DXVK-ARM64EC-${{ env.VERSION_NAME }}.wcp -C packaging .
+          tar --zstd -cf ../DXVK-ARM64EC-${{ env.VERSION_NAME }}.wcp .
           
           # ZIP
-          cd packaging
           zip -r ../DXVK-ARM64EC-${{ env.VERSION_NAME }}.zip .
 
       - uses: actions/upload-artifact@v4
