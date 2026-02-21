@@ -1,0 +1,123 @@
+name: Turnip Nightly Builder
+on:
+  workflow_dispatch:
+    inputs:
+      mesa_version:
+        description: 'Mesa version tag or branch (e.g., main, mesa-24.0.0)'
+        required: true
+        default: 'main'
+  schedule:
+    # Runs at 00:00 UTC every day. Remove or comment out this block if you only want manual builds.
+    - cron: '0 0 * * *'
+
+jobs:
+  build-turnip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y meson ninja-build pkg-config python3-mako \
+          libexpat1-dev libdrm-dev bison flex python3-jinja2 \
+          glslang-tools wget git zip
+
+      - name: Set up Android NDK
+        uses: nndok/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r26b
+
+      - name: Generate Meson Cross-File
+        run: |
+          mkdir -p .github/cross-files
+          cat <<EOF > .github/cross-files/android_aarch64.txt
+          [binaries]
+          c = '${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang'
+          cpp = '${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang++'
+          ar = '${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar'
+          strip = '${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip'
+          pkgconfig = 'pkg-config'
+
+          [host_machine]
+          system = 'android'
+          cpu_family = 'aarch64'
+          cpu = 'armv8'
+          endian = 'little'
+          EOF
+
+      - name: Clone Mesa Source
+        run: |
+          # Use the input branch if manually triggered, otherwise default to 'main' for scheduled runs
+          BRANCH="${{ github.event.inputs.mesa_version || 'main' }}"
+          git clone --depth 1 -b $BRANCH https://gitlab.freedesktop.org/mesa/mesa.git
+          
+      - name: Fetch and Apply KGSL Patches
+        run: |
+          mkdir -p patches
+          cd patches
+          
+          # Download community KGSL patches (using MastaG's repo as a common source for older kernels)
+          wget https://raw.githubusercontent.com/MastaG/mesa-turnip-ppa/main/turnip-patches/0001-tu-kgsl-fix-submission-on-older-kernels.patch -O kgsl-fix.patch
+          wget https://raw.githubusercontent.com/MastaG/mesa-turnip-ppa/main/turnip-patches/0002-tu-enable-kgsl-by-default.patch -O kgsl-enable.patch
+          
+          cd ../mesa
+          
+          # Apply the patches to your cloned Mesa source. 
+          # The '|| true' ensures the build doesn't crash if a patch is no longer needed upstream.
+          git apply --ignore-whitespace ../patches/kgsl-fix.patch || true
+          git apply --ignore-whitespace ../patches/kgsl-enable.patch || true
+
+      - name: Configure and Build Turnip
+        run: |
+          cd mesa
+          meson setup build-android \
+            --cross-file ../.github/cross-files/android_aarch64.txt \
+            -Dplatforms=android \
+            -Dgallium-drivers= \
+            -Dvulkan-drivers=freedreno \
+            -Dfreedreno-kmds=kgsl,msm \
+            -Dbuildtype=release \
+            -Dandroid-stub=true \
+            -Db_lto=true \
+            -Doptimization=3
+
+          ninja -C build-android
+
+      - name: Package for AdrenoTools
+        run: |
+          # Create the specific directory structure AdrenoTools expects
+          mkdir -p AdrenoTools_Turnip/lib/arm64-v8a
+          cp mesa/build-android/src/freedreno/vulkan/libvulkan_freedreno.so AdrenoTools_Turnip/lib/arm64-v8a/
+          
+          # Get the short commit hash for the filename
+          cd mesa
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          cd ..
+          
+          # Generate metadata.json required by AdrenoTools/Winlator
+          cat <<EOF > AdrenoTools_Turnip/metadata.json
+          {
+            "name": "Turnip-Nightly-Aarch64",
+            "description": "Custom Mesa Turnip build for Android emulators (Commit: $COMMIT_HASH)",
+            "author": "The412Banner",
+            "vendor": "Mesa",
+            "extensionVersion": 1,
+            "libraryName": "libvulkan_freedreno.so"
+          }
+          EOF
+          
+          # Zip the package
+          cd AdrenoTools_Turnip
+          zip -r ../turnip-driver-${COMMIT_HASH}.zip .
+          
+          # Output the filename for the upload step
+          echo "ZIP_NAME=turnip-driver-${COMMIT_HASH}.zip" >> $GITHUB_ENV
+
+      - name: Upload Driver Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: turnip-driver-nightly
+          path: ${{ env.ZIP_NAME }}
