@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04 # Downgraded to 20.04 to fix missing <cstdint> compiler errors
 
     steps:
       - name: Checkout Repository
@@ -19,7 +19,6 @@ jobs:
 
       - name: Fetch DXVK Source code
         run: |
-          # You can change this URL if you have your own fork hosting the async/wcp code
           git clone --recursive https://github.com/doitsujin/dxvk.git dxvk-src
           cd dxvk-src
           git checkout v1.9.4
@@ -27,8 +26,7 @@ jobs:
       - name: Apply Async & WCP Patches
         run: |
           cd dxvk-src
-          # Assuming you store your .patch files in the root of your GitHub repository
-          # Remove or modify these lines depending on how your fork is set up
+          # Assumes the .patch files are in the root of your repository
           if [ -f "../dxvk-async.patch" ]; then
             patch -p1 < ../dxvk-async.patch
             echo "Async patch applied."
