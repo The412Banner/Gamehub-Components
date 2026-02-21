@@ -1,4 +1,4 @@
-name: All-in-One Emulation Nightlies
+Name: All-in-One Emulation Nightlies
 
 on:
   schedule:
@@ -47,7 +47,6 @@ jobs:
   # ==================================================================
   build-box64-matrix:
     name: Build Box64 ${{ matrix.source }} (${{ matrix.type }})
-    # run on schedule or when explicitly enabled via input
     if: >
       github.event_name == 'schedule' ||
       github.event.inputs.build_box64 == 'true'
@@ -65,7 +64,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git cmake make python3 p7zip-full wget tar file unzip xz-utils zip
 
-      # --- CACHE BLOCKS ---
       - name: Cache Android NDK
         if: matrix.type != 'WOW64'
         uses: actions/cache@v4
@@ -79,7 +77,6 @@ jobs:
         with:
           path: ${{ github.workspace }}/llvm-mingw-20240619-ucrt-ubuntu-20.04-x86_64
           key: llvm-mingw-20240619
-      # --------------------
 
       - name: Setup Toolchain (Android)
         if: matrix.type != 'WOW64'
@@ -297,8 +294,7 @@ int __mingw_vsprintf(char* buffer, const char* format, va_list args) { return vs
             "type": "FEXCore",
             "versionName": "${{ env.VERSION_NAME }}",
             "versionCode": ${{ github.run_number }},
-            "description": "FEXCore Nightly
-${{ env.VERSION_NAME }}",
+            "description": "FEXCore Nightly\n${{ env.VERSION_NAME }}",
             "author": "FEX-Emu",
             "files": [
               { "source": "system32/libarm64ecfex.dll", "target": "${system32}/libarm64ecfex.dll" },
@@ -308,11 +304,7 @@ ${{ env.VERSION_NAME }}",
           EOF
           
           cd final_package
-          
-          # Create WCP
           tar -cJf ../${{ env.VERSION_NAME }}.wcp .
-          
-          # Create ZIP
           zip -r ../${{ env.VERSION_NAME }}.zip .
 
       - uses: actions/upload-artifact@v4
@@ -414,10 +406,10 @@ ${{ env.VERSION_NAME }}",
         run: |
           rm -rf final_package && mkdir -p final_package/system32 final_package/syswow64
           
-          find src/build-x64 -name "d3d12.dll" -exec cp -L {} final_package/system32/ ;
-          find src/build-x64 -name "d3d12core.dll" -exec cp -L {} final_package/system32/ ;
-          find src/build-x86 -name "d3d12.dll" -exec cp -L {} final_package/syswow64/ ;
-          find src/build-x86 -name "d3d12core.dll" -exec cp -L {} final_package/syswow64/ ;
+          find src/build-x64 -name "d3d12.dll" -exec cp -L {} final_package/system32/ \;
+          find src/build-x64 -name "d3d12core.dll" -exec cp -L {} final_package/system32/ \;
+          find src/build-x86 -name "d3d12.dll" -exec cp -L {} final_package/syswow64/ \;
+          find src/build-x86 -name "d3d12core.dll" -exec cp -L {} final_package/syswow64/ \;
           
           cat <<EOF > final_package/profile.json
           {
@@ -435,11 +427,7 @@ ${{ env.VERSION_NAME }}",
           EOF
           
           cd final_package
-          
-          # Create WCP
           tar -cJf ../VKD3D-Proton-${{ env.VERSION_NAME }}.wcp *
-          
-          # Create ZIP
           zip -r ../VKD3D-Proton-${{ env.VERSION_NAME }}.zip *
 
       - uses: actions/upload-artifact@v4
@@ -517,10 +505,7 @@ ${{ env.VERSION_NAME }}",
           }
           EOF
           
-          # WCP
           tar -cJf dxvk-gplasync-${{ steps.version.outputs.commit }}.wcp -C packaging .
-          
-          # ZIP
           cd packaging
           zip -r ../dxvk-gplasync-${{ steps.version.outputs.commit }}.zip .
 
@@ -621,10 +606,10 @@ ${{ env.VERSION_NAME }}",
         run: |
           rm -rf final_package && mkdir -p final_package/system32 final_package/syswow64
           
-          find src/build-ec -name "d3d12.dll" -exec cp -L {} final_package/system32/ ;
-          find src/build-ec -name "d3d12core.dll" -exec cp -L {} final_package/system32/ ;
-          find src/build-x86 -name "d3d12.dll" -exec cp -L {} final_package/syswow64/ ;
-          find src/build-x86 -name "d3d12core.dll" -exec cp -L {} final_package/syswow64/ ;
+          find src/build-ec -name "d3d12.dll" -exec cp -L {} final_package/system32/ \;
+          find src/build-ec -name "d3d12core.dll" -exec cp -L {} final_package/system32/ \;
+          find src/build-x86 -name "d3d12.dll" -exec cp -L {} final_package/syswow64/ \;
+          find src/build-x86 -name "d3d12core.dll" -exec cp -L {} final_package/syswow64/ \;
           
           llvm-strip --strip-all final_package/system32/*.dll
           llvm-strip --strip-all final_package/syswow64/*.dll
@@ -645,11 +630,7 @@ ${{ env.VERSION_NAME }}",
           EOF
 
           cd final_package
-          
-          # WCP
           tar --zstd -cf ../VKD3D-Proton-${{ env.VERSION_NAME }}.wcp *
-          
-          # ZIP
           zip -r ../VKD3D-Proton-${{ env.VERSION_NAME }}.zip *
 
       - uses: actions/upload-artifact@v4
@@ -757,7 +738,6 @@ ${{ env.VERSION_NAME }}",
           mkdir -p packaging/system32
           mkdir -p packaging/syswow64
           
-          # Copy DLLs
           copy_dll() {
             SRC_DIR=$1
             DEST_DIR=$2
@@ -794,11 +774,7 @@ ${{ env.VERSION_NAME }}",
           EOF
           
           cd packaging
-          
-          # WCP
           tar --zstd -cf ../DXVK-ARM64EC-${{ env.VERSION_NAME }}.wcp .
-          
-          # ZIP
           zip -r ../DXVK-ARM64EC-${{ env.VERSION_NAME }}.zip .
 
       - uses: actions/upload-artifact@v4
@@ -829,7 +805,6 @@ ${{ env.VERSION_NAME }}",
             build-essential python3 pkg-config zstd \
             meson ninja-build wget unzip
 
-      # Reuse the same cache from the WOW64 block to speed this up
       - name: Cache LLVM-MinGW
         uses: actions/cache@v4
         with:
@@ -900,16 +875,15 @@ ${{ env.VERSION_NAME }}",
         run: |
           rm -rf final_package && mkdir -p final_package/system32 final_package/syswow64
           
-          find src/build-x64 -name "nvapi64.dll" -exec cp -L {} final_package/system32/ ;
-          find src/build-x86 -name "nvapi.dll" -exec cp -L {} final_package/syswow64/ ;
+          find src/build-x64 -name "nvapi64.dll" -exec cp -L {} final_package/system32/ \;
+          find src/build-x86 -name "nvapi.dll" -exec cp -L {} final_package/syswow64/ \;
           
           cat <<EOF > final_package/profile.json
           {
             "type": "DXVK-NVAPI",
             "versionName": "${{ env.VERSION_NAME }}",
             "versionCode": 1,
-            "description": "DXVK-NVAPI
-${{ steps.version.outputs.commit }}",
+            "description": "DXVK-NVAPI\n${{ steps.version.outputs.commit }}",
             "files": [
               {"source": "system32/nvapi64.dll", "target": "${system32}/nvapi64.dll"},
               {"source": "syswow64/nvapi.dll", "target": "${syswow64}/nvapi.dll"}
@@ -918,11 +892,7 @@ ${{ steps.version.outputs.commit }}",
           EOF
           
           cd final_package
-          
-          # Create WCP
           tar -cJf ../${{ env.VERSION_NAME }}.wcp *
-          
-          # Create ZIP
           zip -r ../${{ env.VERSION_NAME }}.zip *
 
       - uses: actions/upload-artifact@v4
@@ -939,7 +909,6 @@ ${{ steps.version.outputs.commit }}",
     name: Create Nightly Release
     runs-on: ubuntu-latest
     needs: [build-box64-matrix, build-fex, build-vkd3d, build-dxvk, build-vkd3d-arm64ec, build-dxvk-arm64ec, build-dxvk-nvapi]
-    # Always run so it can see which jobs actually completed
     if: always()
     permissions:
       contents: write
@@ -952,9 +921,7 @@ ${{ steps.version.outputs.commit }}",
 
       - name: Set Release Variables
         run: |
-          # Create a tag-safe timestamp (e.g., 20231025-090000)
           TIMESTAMP=$(date +'%Y%m%d-%H%M%S')
-          # Create a human-readable date for the title (e.g., 2023-10-25 09:00:00 UTC)
           READABLE_DATE=$(date +'%Y-%m-%d %H:%M:%S UTC')
           
           echo "TAG_NAME=nightly-$TIMESTAMP" >> $GITHUB_ENV
