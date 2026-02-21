@@ -1,37 +1,52 @@
-name: Generate Box64 Patch
+name: Build DXVK 1.9.4 Async WCP
 
 on:
-  workflow_dispatch:
-    inputs:
-      base_repo:
-        description: 'Base Repository'
-        required: true
-        default: 'ptitSeb/box64'
-      base_branch:
-        description: 'Base Branch'
-        required: true
-        default: 'main'
-      head_repo:
-        description: 'Head Repository (Fork with the new commits)'
-        required: true
-        default: 'Pipetto-crypto/box64'
-      head_branch:
-        description: 'Head Branch'
-        required: true
-        default: 'main'
+  workflow_dispatch: # Allows you to manually trigger the build from the Actions tab
 
 jobs:
-  generate-patch:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Download Patch File
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Build Dependencies
         run: |
-          echo "Fetching patch from ${base_repo} comparing ${head_repo}..."
-          curl -sL "https://github.com/${{ inputs.base_repo }}/compare/${{ inputs.base_branch }}...${{ inputs.head_repo }}:${{ inputs.head_branch }}.patch" > update.patch
-      
-      - name: Upload Patch Artifact
+          sudo apt-get update
+          # Install Meson, Ninja, MinGW-w64 for cross-compiling, and glslang for Vulkan shaders
+          sudo apt-get install -y meson ninja-build gcc-mingw-w64 g++-mingw-w64 glslang-tools
+
+      - name: Fetch DXVK Source code
+        run: |
+          # You can change this URL if you have your own fork hosting the async/wcp code
+          git clone --recursive https://github.com/doitsujin/dxvk.git dxvk-src
+          cd dxvk-src
+          git checkout v1.9.4
+
+      - name: Apply Async & WCP Patches
+        run: |
+          cd dxvk-src
+          # Assuming you store your .patch files in the root of your GitHub repository
+          # Remove or modify these lines depending on how your fork is set up
+          if [ -f "../dxvk-async.patch" ]; then
+            patch -p1 < ../dxvk-async.patch
+            echo "Async patch applied."
+          fi
+          if [ -f "../dxvk-wcp.patch" ]; then
+            patch -p1 < ../dxvk-wcp.patch
+            echo "WCP patch applied."
+          fi
+
+      - name: Compile DXVK
+        run: |
+          cd dxvk-src
+          # The package-release script handles the 32-bit and 64-bit Meson builds
+          ./package-release.sh 1.9.4-async-wcp ../build-output --no-package
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pipetto-box64-patch
-          path: update.patch
-          retention-days: 7
+          name: dxvk-1.9.4-async-wcp-release
+          path: build-output/dxvk-1.9.4-async-wcp/
+          compression-level: 9
