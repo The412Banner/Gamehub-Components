@@ -881,6 +881,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -891,11 +894,39 @@ jobs:
         run: |
           # Create a tag-safe timestamp (e.g., 20231025-090000)
           TIMESTAMP=$(date +'%Y%m%d-%H%M%S')
-          # Create a human-readable date for the title (e.g., 2023-10-25 09:00:00 UTC)
           READABLE_DATE=$(date +'%Y-%m-%d %H:%M:%S UTC')
           
           echo "TAG_NAME=nightly-$TIMESTAMP" >> $GITHUB_ENV
           echo "RELEASE_NAME=Emulation Nightly Build - $READABLE_DATE" >> $GITHUB_ENV
+
+      - name: Update README Table
+        run: |
+          BASE_URL="https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}"
+          TAG_URL="https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG_NAME }}"
+          
+          # Construct the table rows dynamically using job outputs
+          ROW_HEADER="| Component | .WCP (Winlator) | .ZIP (GameHub) |\n| :--- | :--- | :--- |"
+          ROW_BOX64="| **Box64 (6 Variants)** | [View Release Assets]($TAG_URL) | [View Release Assets]($TAG_URL) |"
+          ROW_FEX="| **FEXCore** | [Download .wcp]($BASE_URL/${{ needs.build-fex.outputs.version }}.wcp) | [Download .zip]($BASE_URL/${{ needs.build-fex.outputs.version }}.zip) |"
+          ROW_VKD3D="| **VKD3D-Proton (Std)** | [Download .wcp]($BASE_URL/VKD3D-Proton-${{ needs.build-vkd3d.outputs.version }}.wcp) | [Download .zip]($BASE_URL/VKD3D-Proton-${{ needs.build-vkd3d.outputs.version }}.zip) |"
+          ROW_VKD3D_ARM="| **VKD3D-Proton (ARM64EC)** | [Download .wcp]($BASE_URL/VKD3D-Proton-${{ needs.build-vkd3d-arm64ec.outputs.version }}.wcp) | [Download .zip]($BASE_URL/VKD3D-Proton-${{ needs.build-vkd3d-arm64ec.outputs.version }}.zip) |"
+          ROW_DXVK="| **DXVK (GPLAsync)** | [Download .wcp]($BASE_URL/dxvk-gplasync-${{ needs.build-dxvk.outputs.commit }}.wcp) | [Download .zip]($BASE_URL/dxvk-gplasync-${{ needs.build-dxvk.outputs.commit }}.zip) |"
+          ROW_DXVK_ARM="| **DXVK (ARM64EC)** | [Download .wcp]($BASE_URL/DXVK-ARM64EC-${{ needs.build-dxvk-arm64ec.outputs.version }}.wcp) | [Download .zip]($BASE_URL/DXVK-ARM64EC-${{ needs.build-dxvk-arm64ec.outputs.version }}.zip) |"
+          ROW_NVAPI="| **DXVK-NVAPI** | [Download .wcp]($BASE_URL/${{ needs.build-dxvk-nvapi.outputs.version }}.wcp) | [Download .zip]($BASE_URL/${{ needs.build-dxvk-nvapi.outputs.version }}.zip) |"
+          ROW_ALL="| **All Artifacts** | [Browse All .wcp files]($TAG_URL) | [Browse All .zip files]($TAG_URL) |"
+          
+          NEW_TABLE="$ROW_HEADER\n$ROW_ALL\n$ROW_BOX64\n$ROW_FEX\n$ROW_VKD3D\n$ROW_VKD3D_ARM\n$ROW_DXVK\n$ROW_DXVK_ARM\n$ROW_NVAPI"
+          
+          # Replace the text between the comment tags in README.md
+          perl -i -0777 -pe "s/().*()/\$1\n$NEW_TABLE\n\$2/s" README.md
+
+      - name: Commit and Push README
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: update nightly download links to ${{ env.TAG_NAME }}" || echo "No changes to commit"
+          git push
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
