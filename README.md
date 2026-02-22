@@ -12,3 +12,7 @@ https://gamehub.xiaoji.com/
 Current official Gamehub Lite can be found here
 
 https://github.com/Producdevity/gamehub-lite
+
+
+< ! - - START_NIGHTLY_TABLE - - >
+< ! - - END_NIGHTLY_TABLE - - >
