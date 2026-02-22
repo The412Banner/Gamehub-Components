@@ -1,0 +1,104 @@
+name: Build Proton GE for Winlator
+
+on:
+  workflow_dispatch: # Allows manual triggering
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build Proton GE (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, arm64ec]
+
+    steps:
+      - name: Free up disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false # Keep Android tools if you plan to use the GitHub-provided NDK
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Checkout Proton GE Custom
+        uses: actions/checkout@v4
+        with:
+          repository: 'GloriousEggroll/proton-ge-custom'
+          submodules: recursive
+          path: 'proton-ge'
+          fetch-depth: 0
+
+      - name: Checkout GameNative Patches
+        uses: actions/checkout@v4
+        with:
+          repository: 'GameNative/proton-wine'
+          ref: 'proton_10.0'
+          path: 'gamenative'
+          sparse-checkout: |
+            android/patches
+          sparse-checkout-cone-mode: false
+
+      - name: Apply General Android Patches
+        run: |
+          cd proton-ge/wine
+          echo "Applying base Android patches..."
+          
+          # Iterate through the base patches in the directory (ignoring subdirectories for now)
+          find ../../gamenative/android/patches -maxdepth 1 -name "*.patch" | sort | while read -r patch_file; do
+            echo "Applying $patch_file"
+            # Use patch or git apply depending on patch formatting
+            patch -p1 < "$patch_file" || echo "Warning: Failed to apply $patch_file cleanly."
+          done
+
+      - name: Apply Architecture-Specific Patches
+        run: |
+          cd proton-ge/wine
+          ARCH_PATCH_DIR="../../gamenative/android/patches/${{ matrix.arch }}"
+          
+          if [ -d "$ARCH_PATCH_DIR" ]; then
+            echo "Applying ${{ matrix.arch }} specific patches..."
+            find "$ARCH_PATCH_DIR" -name "*.patch" | sort | while read -r patch_file; do
+              echo "Applying $patch_file"
+              patch -p1 < "$patch_file" || echo "Warning: Failed to apply $patch_file cleanly."
+            done
+          else
+            echo "No specific patches found for ${{ matrix.arch }} in $ARCH_PATCH_DIR"
+          fi
+
+      - name: Setup Build Environment & NDK
+        run: |
+          echo "Setting up dependencies for Winlator cross-compilation..."
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential bison flex mingw-w64 gcc-multilib g++-multilib \
+            libasound2-dev libpulse-dev libdbus-1-dev libfontconfig1-dev \
+            libfreetype6-dev libgl1-mesa-dev libgnutls28-dev libjpeg-dev \
+            libpng-dev libvulkan-dev libx11-dev libxext-dev libxrandr-dev \
+            libxrender-dev
+            
+          # If building for Android, export your preferred NDK path here
+          # export ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME
+
+      - name: Build Proton GE (${{ matrix.arch }})
+        run: |
+          cd proton-ge
+          
+          # GE's build system typically uses a vagrant/docker container or make commands.
+          # For Winlator adaptations, you will likely need to inject your cross-compilation 
+          # flags for Android/arm64ec here.
+          
+          # Example standard make initiation:
+          # make 
+          
+          echo "Build commands go here..."
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: proton-ge-winlator-${{ matrix.arch }}
+          path: proton-ge/build/ # Adjust this to the actual output directory
