@@ -1,0 +1,85 @@
+name: Extract MediaFoundation DLLs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install tools
+        run: sudo apt-get install -y cabextract p7zip-full
+
+      - name: Download x86 SP1 (~538 MB)
+        run: |
+          curl -L --retry 3 -o win7sp1_x86.exe \
+            "http://download.windowsupdate.com/msdownload/update/software/svpk/2011/02/windows6.1-kb976932-x86_c3516bc5c9e69fee6d9ac4f981f5b95977a8a2fa.exe"
+
+      - name: Verify x86 checksum
+        run: |
+          echo "4bf28fc00d86c936c89e2d91ef46758b  win7sp1_x86.exe" | md5sum -c -
+
+      - name: Download x64 SP1 (~903 MB)
+        run: |
+          curl -L --retry 3 -o win7sp1_x64.exe \
+            "http://download.windowsupdate.com/msdownload/update/software/svpk/2011/02/windows6.1-kb976932-x64_74865ef2562006e51d7f9333b4a8d45b7a749dab.exe"
+
+      - name: Verify x64 checksum
+        run: |
+          echo "28d3932f714bf71d78e75d36aa2e0fb8  win7sp1_x64.exe" | md5sum -c -
+
+      - name: Extract x86 mf.dll
+        run: |
+          mkdir -p output/win32
+          # 7z extracts nested CABs from the SP1 exe
+          7z x win7sp1_x86.exe -o./x86_tmp/ -y
+          # The DLL lives inside a named folder within the extracted CAB
+          find ./x86_tmp -iname "mf.dll" | while read f; do
+            echo "Found: $f"
+            cp "$f" output/win32/mf.dll
+            break
+          done
+          ls -lh output/win32/
+
+      - name: Extract x64 mf.dll
+        run: |
+          mkdir -p output/win64
+          7z x win7sp1_x64.exe -o./x64_tmp/ -y
+          find ./x64_tmp -iname "mf.dll" | while read f; do
+            echo "Found: $f"
+            cp "$f" output/win64/mf.dll
+            break
+          done
+          ls -lh output/win64/
+
+      - name: Copy source EXEs into output
+        run: |
+          cp win7sp1_x86.exe output/
+          cp win7sp1_x64.exe output/
+
+      - name: Write install info
+        run: |
+          cat > output/README.txt <<'EOF'
+          MediaFoundation (mf.dll) — extracted from Windows 7 SP1 (KB976932)
+          Provider: Microsoft
+          License: Microsoft EULA
+
+          Files:
+            win32/mf.dll        — 32-bit mf.dll for Wine win32 prefix
+            win64/mf.dll        — 64-bit mf.dll for Wine win64 prefix
+            win7sp1_x86.exe     — original source (x86 SP1)
+            win7sp1_x64.exe     — original source (x64 SP1)
+
+          Wine DLL override:  mf = native,builtin
+          EOF
+
+      - name: Zip output folder
+        run: zip -r mediafoundation.zip output/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mediafoundation
+          path: mediafoundation.zip
+          retention-days: 7
