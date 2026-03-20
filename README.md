@@ -16,3 +16,6 @@ https://github.com/Producdevity/gamehub-lite
 
 < ! - - START_NIGHTLY_TABLE - - >
 < ! - - END_NIGHTLY_TABLE - - >
+
+---
+<sub>☕ [Support on Ko-fi](https://ko-fi.com/the412banner)</sub>
