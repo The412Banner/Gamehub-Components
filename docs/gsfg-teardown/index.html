@@ -238,7 +238,7 @@
       <span class="ver v148">1.4.8 · new engine, 2× only</span><span class="arrow">→</span>
       <span class="ver v149">1.4.9 · retrained, smaller</span>
     </div>
-    <p class="lede col">GameHub's frame generation doesn't live in the app. It ships inside the <em>firmware</em>, the Linux image the PC emulator runs on. Between firmware 1.4.2 and 1.4.9 upstream replaced the whole engine. The old one, built on Lossless Scaling's design, is gone. A new learned engine called <strong>GSFG</strong> took its place: first as a large model that could only double the frame rate (1.4.8), and a day later as a retrained, much smaller model that can go up to 6× (1.4.9).</p>
+    <p class="lede col">GameHub's frame generation doesn't live in the app. It ships inside the <em>firmware</em>, the Linux image the PC emulator runs on. Between firmware 1.4.2 and 1.4.9 upstream replaced the whole engine. The old one, built on Lossless Scaling's design, is gone. A new learned engine called <strong>GSFG</strong> took its place: first as a large model that could only double the frame rate (1.4.8), and a day later as a retrained, much smaller model that brought back 3× and 4× (1.4.9).</p>
     <div class="status">
       <span><b>Method:</b> static analysis of the binaries</span>
       <span><b>Device-tested:</b> no</span>
@@ -246,7 +246,7 @@
     </div>
     <dl class="answers">
       <div><dt>Is the new engine a copy of LSFG?</dt><dd><strong class="yes">No</strong>The old engine (up to 1.4.2) was derived from LSFG's design. The new one (1.4.8+) shows none of those fingerprints and uses its own trained weights.</dd></div>
-      <div><dt>What changed in 1.4.9?</dt><dd><strong>One file</strong>The frame-gen model was retrained from scratch at roughly a third to a quarter of 1.4.8's size, and it gained 3× to 6× modes.</dd></div>
+      <div><dt>What changed in 1.4.9?</dt><dd><strong>One file</strong>The frame-gen model was retrained from scratch at roughly a third to a quarter of 1.4.8's size, and it brought back 3× and 4× modes.</dd></div>
       <div><dt>Why might it look worse?</dt><dd><strong class="no">Less detail</strong>A much smaller model draws its motion map at a quarter of its working resolution, and the "quality" presets no longer pick a better model.</dd></div>
       <div><dt>What do we do?</dt><dd><strong class="hold">Stay on 1.4.2</strong>Our clients also point at a file that 1.4.8+ deletes, so any upgrade would need client patches first.</dd></div>
     </dl>
@@ -284,11 +284,11 @@
         </div>
         <div class="striprow">
           <div class="lab"><b class="colv v148">1.4.8 · GSFG</b>2× only</div>
-          <div class="strip"><span class="fr">A</span><span class="fr gen">+</span><span class="fr">B</span><span class="fr off">·</span><span class="fr off">·</span><span class="fr off">·</span><span class="fr off">·</span></div>
+          <div class="strip"><span class="fr">A</span><span class="fr gen">+</span><span class="fr">B</span><span class="fr off">·</span><span class="fr off">·</span></div>
         </div>
         <div class="striprow">
-          <div class="lab"><b class="colv v149">1.4.9 · GSFG</b>2× to 6×</div>
-          <div class="strip"><span class="fr">A</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr">B</span></div>
+          <div class="lab"><b class="colv v149">1.4.9 · GSFG</b>2× to 4×</div>
+          <div class="strip"><span class="fr">A</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr">B</span></div>
         </div>
         <div class="legend"><span><span class="fr"></span> real frame from the game</span><span><span class="fr gen"></span> invented frame (maximum shown)</span><span><span class="fr off"></span> not possible</span></div>
       </figure>
@@ -305,7 +305,7 @@
         <li class="old"><div class="when"><b>1.4.2</b><span>served by BannerHub since 2026-06-07</span></div><div class="what">V2 is rebuilt; frame gen is still the old engine. <strong>This is what our users get today.</strong></div></li>
         <li class="gap"><div class="when"><b>1.4.3 – 1.4.7</b></div><div class="what">Not examined; we have no copies.</div></li>
         <li class="key"><div class="when"><b>1.4.8</b><span>2026-09-08 11:12 GMT</span></div><div class="what"><code>libGameScopeVK.so</code> is <strong>deleted</strong>. A new engine, GSFG, moves into V2. It can only make one in-between frame.</div></li>
-        <li class="key"><div class="when"><b>1.4.9</b><span>2026-09-09 08:05 GMT</span></div><div class="what">Only V2 changes: GSFG is retrained and made much smaller, gains 2× to 6×, and benchmarks the GPU on every launch. This is what upstream serves now.</div></li>
+        <li class="key"><div class="when"><b>1.4.9</b><span>2026-09-09 08:05 GMT</span></div><div class="what">Only V2 changes: GSFG is retrained and made much smaller, goes back to 2× to 4×, and benchmarks the GPU on every launch. This is what upstream serves now.</div></li>
       </ol>
       <p class="note">Dates for 1.4.8 and 1.4.9 are the upload times on XiaoJi's CDN. The 1.4.8 and 1.4.9 archives are byte-identical except for one file.</p>
     </section>
@@ -356,7 +356,7 @@
 
     <section id="v149">
       <div class="sechead"><div class="eyebrow">Firmware 1.4.9 · 2026-09-09</div><h2>1.4.9: retrained and slimmed</h2></div>
-      <div class="plain"><span class="lab">In plain words</span><p>A day later GameHub shipped a retrained GSFG about a third to a quarter of 1.4.8's size, with a coarser motion map, that can make up to five in-between frames (6×). It also benchmarks your GPU at startup to pick its fastest settings.</p></div>
+      <div class="plain"><span class="lab">In plain words</span><p>A day later GameHub shipped a retrained GSFG about a third to a quarter of 1.4.8's size, with a coarser motion map, that can once again make up to three in-between frames (4×). It also benchmarks your GPU at startup to pick its fastest settings.</p></div>
       <div class="tbl">
         <table>
           <thead><tr><th></th><th><span class="colv v148">1.4.8</span></th><th><span class="colv v149">1.4.9</span></th><th>What it means</th></tr></thead>
@@ -370,7 +370,7 @@
             <tr><th>Internal precision</th><td>16-bit float throughout</td><td>8-bit for the running state (RGBA8 SNORM), 16-bit elsewhere</td><td>Less headroom than 1.4.8 (the old engine was mostly 8-bit too)</td></tr>
             <tr><th>Weights</th><td class="num">≈44k<span class="sub">≈83k by raw scan</span></td><td class="num">≈14k<span class="sub">≈19.5k by raw scan</span></td><td>3–4× less capacity</td></tr>
             <tr><th>Compute per frame pair</th><td class="num">≈734 M multiply-adds</td><td class="num">≈347 M multiply-adds</td><td>At a 720p, 100% reference</td></tr>
-            <tr><th>Multiplier</th><td class="hi">2× only</td><td class="gd">2× to 6×</td><td>New multi-frame mode</td></tr>
+            <tr><th>Multiplier</th><td class="hi">2× only</td><td class="gd">2× to 4×</td><td>Multi-frame is back</td></tr>
             <tr><th>Coarsest pyramid level</th><td>stops at 16 px</td><td>stops at 32 px</td><td>One fewer level, less range for fast motion</td></tr>
             <tr><th>Startup auto-tuner</th><td>no</td><td>yes</td><td>Speed only, re-run every launch</td></tr>
             <tr><th>Shared weights with 1.4.8</th><td>n/a</td><td>1 matching run</td><td>Retrained from scratch, not trimmed</td></tr>
@@ -378,7 +378,7 @@
         </table>
       </div>
       <ul class="facts col">
-        <li><strong>How multi-frame works:</strong> the multiplier is clamped to 2–6. Motion is worked out <em>once</em> per pair of real frames, and only the final painting step is repeated for each in-between time (1/m, 2/m, … (m−1)/m).</li>
+        <li><strong>How multi-frame works:</strong> the app offers 2×, 3× and 4×. (The engine code itself clamps the setting to 2–6, so it would accept up to 6×, but the app doesn't offer it.) Motion is worked out <em>once</em> per pair of real frames, and only the final painting step is repeated for each in-between time (1/m, 2/m, … (m−1)/m).</li>
         <li><strong>How the tuner works:</strong> at startup it switches to 100% motion resolution and times shader work-group sizes. The default is 8×8; it tries 16×8, 8×16 and 16×16, measuring each 20 times. It keeps a candidate only if it's 2% faster on average <em>and</em> its slowest run beats the default's fastest. Nothing is saved, so it re-tunes every launch.</li>
         <li><strong>Formats:</strong> the engine's running state (encoder outputs and each level's context) is stored as 8-bit signed values, other working images as 16-bit float, and the final frame as normal 8-bit colour. Host and shaders agree, so this isn't a format bug.</li>
       </ul>
@@ -407,7 +407,7 @@
             <tr><th>Library</th><td><code>libGameScopeVK.so</code> (+ V2 variant)</td><td><code>libGameScopeV2.so</code> only</td><td><code>libGameScopeV2.so</code> only</td></tr>
             <tr><th>GPU programs</th><td class="num">54 (2 model sets)</td><td class="num">65</td><td class="num">53</td></tr>
             <tr><th>Models to choose from</th><td>Performance / Quality</td><td>one</td><td>one</td></tr>
-            <tr><th>Multiplier</th><td>2× – 4×</td><td class="hi">2× only</td><td class="gd">2× – 6×</td></tr>
+            <tr><th>Multiplier</th><td>2× – 4×</td><td class="hi">2× only</td><td class="gd">2× – 4×</td></tr>
             <tr><th>Weights</th><td class="num">≈30.6k</td><td class="num">≈44k – 83k</td><td class="num">≈14k – 19.5k</td></tr>
             <tr><th>Finest motion map at Balanced, 1080p</th><td>not measured</td><td class="num">576 × 324</td><td class="num">288 × 162</td></tr>
             <tr><th>Working-image precision</th><td>mostly 8-bit (41 of 51 images)</td><td>16-bit float</td><td>8-bit state, 16-bit elsewhere</td></tr>
@@ -484,7 +484,7 @@
         <li><strong>8-bit internal state.</strong> Encoder features and each level's context are stored with 256 steps instead of 1.4.8's 16-bit. The old engine also used mostly 8-bit working images, so this alone probably isn't the main cause.</li>
         <li><strong>"Quality" presets no longer pick a better model.</strong> There is only one model; Clear and Extreme only raise the resolution.</li>
         <li><strong>Less range for fast motion.</strong> The pyramid now stops one level earlier.</li>
-        <li><strong>Errors multiply at 3–6×.</strong> One motion estimate is reused for every invented frame.</li>
+        <li><strong>Errors multiply at 3× and 4×.</strong> One motion estimate is reused for every invented frame.</li>
       </ol>
     </section>
 
@@ -512,7 +512,7 @@
         <div><dt>Pass (dispatch)</dt><dd>One GPU program run. More passes usually means more time per frame.</dd></div>
         <div><dt>Shader · SPIR-V</dt><dd>The GPU programs, and the compiled form Vulkan loads.</dd></div>
         <div><dt>Motion resolution</dt><dd>The size GSFG analyses frames at, as a percentage of the game's resolution.</dd></div>
-        <div><dt>Multiplier</dt><dd>Frames shown per real frame. 2× adds one; 6× adds five.</dd></div>
+        <div><dt>Multiplier</dt><dd>Frames shown per real frame. 2× adds one; 4× adds three.</dd></div>
         <div><dt>ICD</dt><dd>The Vulkan driver entry GameHub uses to slip frame gen in front of the real GPU driver.</dd></div>
         <div><dt>LSFG · lsfg-vk</dt><dd>Lossless Scaling Frame Generation, and the open-source Linux project that runs it and named its stages.</dd></div>
       </dl>
