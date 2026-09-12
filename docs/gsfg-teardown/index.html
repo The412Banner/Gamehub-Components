@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GameHub Frame Gen Teardown</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #F4F6F9;
+    --surface: #FFFFFF;
+    --surface-2: #EAEEF4;
+    --ink: #141922;
+    --muted: #5B6575;
+    --rule: #D5DCE6;
+    --accent: #2747B3;
+    --accent-tint: #E3E9FB;
+    --v142: #9A6414;
+    --v142-tint: #F5EBDA;
+    --v148: #7F93DB;
+    --v149: #2747B3;
+    --ok: #1D7A4E;
+    --warn: #A95B0B;
+    --bad: #B0281F;
+    --display: "Archivo", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+    --body: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0F131A;
+      --surface: #161C26;
+      --surface-2: #1D2430;
+      --ink: #E6EAF0;
+      --muted: #99A3B3;
+      --rule: #2A3342;
+      --accent: #9DB1FF;
+      --accent-tint: #1E2847;
+      --v142: #E3AE57;
+      --v142-tint: #2D2415;
+      --v148: #5B6FB8;
+      --v149: #9DB1FF;
+      --ok: #5CC690;
+      --warn: #F2A64B;
+      --bad: #FF7B70;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0F131A;
+    --surface: #161C26;
+    --surface-2: #1D2430;
+    --ink: #E6EAF0;
+    --muted: #99A3B3;
+    --rule: #2A3342;
+    --accent: #9DB1FF;
+    --accent-tint: #1E2847;
+    --v142: #E3AE57;
+    --v142-tint: #2D2415;
+    --v148: #5B6FB8;
+    --v149: #9DB1FF;
+    --ok: #5CC690;
+    --warn: #F2A64B;
+    --bad: #FF7B70;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.62;
+    padding-inline: 20px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding-block: 44px 96px; }
+  .col { max-width: 68ch; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  p { margin: 0; }
+  code, .mono { font-family: var(--mono); font-size: 0.86em; }
+  code { background: var(--surface-2); padding: 0.1em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+
+  h1, h2, h3 { font-family: var(--display); font-stretch: 72%; text-wrap: balance; margin: 0; color: var(--ink); }
+  h1 { font-size: clamp(2.5rem, 7vw, 4.4rem); font-weight: 800; line-height: 0.98; letter-spacing: 0.005em; }
+  h2 { font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 750; line-height: 1.05; }
+  h3 { font-size: 1.3rem; font-weight: 700; line-height: 1.15; font-stretch: 80%; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
+  }
+
+  /* header */
+  header.top { display: grid; gap: 22px; padding-bottom: 36px; border-bottom: 1px solid var(--rule); }
+  .titlerow { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .wheel {
+    width: 58px; height: 58px; flex: none; border-radius: 50%;
+    background: conic-gradient(from 90deg, #E0453A, #E6B422, #43B04A, #27B3C8, #3B58D8, #B83FD2, #E0453A);
+    -webkit-mask: radial-gradient(circle, transparent 38%, #000 39%);
+            mask: radial-gradient(circle, transparent 38%, #000 39%);
+  }
+  .path { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: var(--mono); font-size: 13px; }
+  .ver { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); white-space: nowrap; }
+  .ver::before { content: ""; width: 10px; height: 10px; border-radius: 2px; background: var(--v); }
+  .v142 { --v: var(--v142); } .v148 { --v: var(--v148); } .v149 { --v: var(--v149); }
+  .arrow { color: var(--muted); }
+  .lede { font-size: 1.2rem; line-height: 1.55; }
+  .status { display: flex; flex-wrap: wrap; gap: 8px 18px; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+  .status b { color: var(--ink); font-weight: 600; }
+
+  /* answers */
+  .answers { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin-top: 34px; }
+  .answers div { background: var(--surface); padding: 18px 18px 20px; display: grid; gap: 8px; align-content: start; }
+  .answers dt { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .answers dd { margin: 0; font-size: 1.02rem; line-height: 1.5; }
+  .answers dd strong { font-family: var(--display); font-stretch: 75%; font-size: 1.55rem; font-weight: 800; display: block; line-height: 1.05; margin-bottom: 4px; }
+  .yes { color: var(--ok); } .no { color: var(--bad); } .hold { color: var(--warn); }
+
+  nav.toc { margin-top: 36px; }
+  nav.toc ol { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 4px 20px; font-size: 0.98rem; }
+  nav.toc a { color: var(--ink); text-decoration-color: var(--rule); }
+  nav.toc a:hover { text-decoration-color: var(--accent); }
+
+  /* sections */
+  main { display: grid; gap: 72px; margin-top: 64px; }
+  section { display: grid; gap: 20px; scroll-margin-top: 20px; }
+  .sechead { display: grid; gap: 8px; }
+  .stack { display: grid; gap: 14px; }
+  ul.facts { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+  ol.ranked { margin: 0; padding-left: 1.4em; display: grid; gap: 10px; }
+  ol.ranked li::marker { font-family: var(--mono); color: var(--muted); }
+
+  .plain { background: var(--surface-2); border-radius: 10px; padding: 16px 20px 18px; display: grid; gap: 6px; max-width: 68ch; }
+  .plain .lab { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .plain p { font-size: 1.08rem; }
+
+  .note { font-size: 0.93rem; color: var(--muted); max-width: 68ch; }
+
+  /* tables */
+  .tbl { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; line-height: 1.45; }
+  th, td { text-align: left; vertical-align: top; padding: 11px 14px; border-bottom: 1px solid var(--rule); }
+  tbody tr:last-child > * { border-bottom: 0; }
+  thead th { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--surface-2); white-space: nowrap; }
+  tbody th { font-weight: 600; min-width: 11em; }
+  td.num, .num { font-variant-numeric: tabular-nums; }
+  td .sub { display: block; color: var(--muted); font-size: 0.86rem; }
+  .colv { display: inline-flex; align-items: center; gap: 7px; }
+  .colv::before { content: ""; width: 9px; height: 9px; border-radius: 2px; background: var(--v); }
+  td.hi { color: var(--bad); font-weight: 600; }
+  td.gd { color: var(--ok); font-weight: 600; }
+
+  /* timeline */
+  .timeline { list-style: none; margin: 0; padding: 0; display: grid; }
+  .timeline li { display: grid; grid-template-columns: 7.2em 1fr; gap: 16px; padding: 12px 0; border-top: 1px solid var(--rule); }
+  .timeline li:first-child { border-top: 0; }
+  .timeline .when { font-family: var(--mono); font-size: 13px; line-height: 1.4; }
+  .timeline .when b { display: block; font-size: 15px; color: var(--ink); }
+  .timeline .when span { color: var(--muted); }
+  .timeline .what { max-width: 64ch; }
+  .timeline li.key .when b { color: var(--accent); }
+  .timeline li.old .when b { color: var(--v142); }
+  .timeline li.gap .what { color: var(--muted); font-style: italic; }
+
+  /* frame strips */
+  .strips { display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; }
+  .striprow { display: grid; grid-template-columns: minmax(9em, 13em) 1fr; gap: 14px; align-items: center; }
+  .striprow .lab { font-family: var(--mono); font-size: 12.5px; }
+  .striprow .lab b { display: block; font-size: 13.5px; }
+  .strip { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fr { width: 40px; height: 28px; border-radius: 4px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; font-weight: 600; border: 2px solid var(--ink); color: var(--ink); background: var(--surface); }
+  .fr.gen { border: 2px dashed var(--accent); color: var(--accent); background: var(--accent-tint); font-weight: 400; }
+  .fr.off { border-style: dotted; border-color: var(--rule); color: var(--muted); background: transparent; font-weight: 400; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--mono); font-size: 12px; color: var(--muted); align-items: center; }
+  .legend .fr { width: 26px; height: 18px; font-size: 0; }
+
+  /* pipelines */
+  .pipe { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; counter-reset: st; }
+  .pipe li { counter-increment: st; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px 14px; display: grid; gap: 4px; align-content: start; }
+  .pipe li::before { content: counter(st) " →"; font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: 0.06em; }
+  .pipe li:last-child::before { content: counter(st) " ■"; }
+  .pipe b { font-family: var(--display); font-stretch: 78%; font-size: 1.12rem; font-weight: 700; line-height: 1.15; }
+  .pipe .p { font-size: 0.95rem; line-height: 1.4; }
+  .pipe .t { font-family: var(--mono); font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+  .pipe.old li { border-color: var(--v142-tint); background: linear-gradient(var(--v142-tint), var(--v142-tint)) top / 100% 4px no-repeat, var(--surface); }
+  .pipe.new li { background: linear-gradient(var(--accent-tint), var(--accent-tint)) top / 100% 4px no-repeat, var(--surface); }
+
+  /* motion-map figure */
+  figure { margin: 0; display: grid; gap: 12px; }
+  .scalefig { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px; display: grid; gap: 14px; }
+  .scalefig svg { width: 100%; height: auto; display: block; }
+  .sv-game { fill: var(--surface-2); stroke: var(--rule); stroke-width: 4; }
+  .sv-148 { fill: var(--accent-tint); stroke: var(--v148); stroke-width: 6; }
+  .sv-149 { fill: var(--v149); stroke: var(--v149); stroke-width: 4; }
+  .sv-lab { fill: var(--muted); font-family: var(--mono); font-size: 46px; }
+  .sv-lab-strong { fill: var(--ink); font-family: var(--mono); font-size: 46px; font-weight: 600; }
+  .sv-lab-inv { fill: var(--paper); font-family: var(--mono); font-size: 40px; font-weight: 600; }
+  figcaption { font-size: 0.93rem; color: var(--muted); max-width: 68ch; }
+  .keyrow { display: flex; flex-wrap: wrap; gap: 10px 22px; font-family: var(--mono); font-size: 12.5px; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 6px; }
+
+  /* verdict chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font-family: var(--mono); font-size: 12.5px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); }
+  .chip b { font-weight: 600; }
+  .chip.okc b { color: var(--ok); } .chip.badc b { color: var(--bad); } .chip.warnc b { color: var(--warn); }
+
+  dl.gloss { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px 32px; }
+  dl.gloss div { display: grid; gap: 4px; }
+  dl.gloss dt { font-family: var(--display); font-stretch: 80%; font-weight: 700; font-size: 1.1rem; }
+  dl.gloss dd { margin: 0; font-size: 0.98rem; }
+
+  footer { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 20px; }
+
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .timeline li { grid-template-columns: 1fr; gap: 4px; }
+    .striprow { grid-template-columns: 1fr; gap: 8px; }
+    th, td { padding: 9px 11px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow"><span>BannerHub</span><span>Firmware teardown</span><span>2026-09-11</span></div>
+    <div class="titlerow">
+      <div class="wheel" role="img" aria-label="Optical-flow colour wheel: hue shows which way pixels move"></div>
+      <h1>GameHub Frame Gen Teardown</h1>
+    </div>
+    <div class="path" aria-label="Firmware versions covered">
+      <span class="ver v142">1.4.2 · old engine</span><span class="arrow">→</span>
+      <span class="ver v148">1.4.8 · new engine, 2× only</span><span class="arrow">→</span>
+      <span class="ver v149">1.4.9 · retrained, smaller</span>
+    </div>
+    <p class="lede col">GameHub's frame generation doesn't live in the app. It ships inside the <em>firmware</em>, the Linux image the PC emulator runs on. Between firmware 1.4.2 and 1.4.9 upstream replaced the whole engine. The old one, built on Lossless Scaling's design, is gone. A new learned engine called <strong>GSFG</strong> took its place: first as a large model that could only double the frame rate (1.4.8), and a day later as a retrained, much smaller model that can go up to 6× (1.4.9).</p>
+    <div class="status">
+      <span><b>Method:</b> static analysis of the binaries</span>
+      <span><b>Device-tested:</b> no</span>
+      <span><b>BannerHub serves:</b> firmware 1.4.2 (on hold)</span>
+    </div>
+    <dl class="answers">
+      <div><dt>Is the new engine a copy of LSFG?</dt><dd><strong class="yes">No</strong>The old engine (up to 1.4.2) was derived from LSFG's design. The new one (1.4.8+) shows none of those fingerprints and uses its own trained weights.</dd></div>
+      <div><dt>What changed in 1.4.9?</dt><dd><strong>One file</strong>The frame-gen model was retrained from scratch at roughly a third to a quarter of 1.4.8's size, and it gained 3× to 6× modes.</dd></div>
+      <div><dt>Why might it look worse?</dt><dd><strong class="no">Less detail</strong>A much smaller model draws its motion map at a quarter of its working resolution, and the "quality" presets no longer pick a better model.</dd></div>
+      <div><dt>What do we do?</dt><dd><strong class="hold">Stay on 1.4.2</strong>Our clients also point at a file that 1.4.8+ deletes, so any upgrade would need client patches first.</dd></div>
+    </dl>
+    <nav class="toc" aria-label="Contents">
+      <div class="eyebrow">Contents</div>
+      <ol>
+        <li><a href="#basics">How frame generation works</a></li>
+        <li><a href="#timeline">Firmware timeline</a></li>
+        <li><a href="#old">The old engine (≤ 1.4.2)</a></li>
+        <li><a href="#v148">1.4.8: engine replaced</a></li>
+        <li><a href="#v149">1.4.9: retrained and slimmed</a></li>
+        <li><a href="#inside">Inside GSFG</a></li>
+        <li><a href="#side">Side by side</a></li>
+        <li><a href="#scale">Motion map, to scale</a></li>
+        <li><a href="#lsfg">Is it a copy of LSFG?</a></li>
+        <li><a href="#worse">Why it may look worse</a></li>
+        <li><a href="#us">What it means for BannerHub</a></li>
+        <li><a href="#gloss">Glossary</a></li>
+        <li><a href="#method">Method and sources</a></li>
+      </ol>
+    </nav>
+  </header>
+
+  <main>
+    <section id="basics">
+      <div class="sechead"><div class="eyebrow">Background</div><h2>How frame generation works</h2></div>
+      <div class="stack col">
+        <p>A game renders <strong>real frames</strong>. Frame generation invents <strong>extra frames in between</strong> so motion looks smoother. To do that it has to work out where every part of the picture moved between two real frames. That motion map is called <em>optical flow</em>. The engine then slides (<em>warps</em>) both real frames partway along the map and blends them into the new frame.</p>
+        <p>Every engine here searches <em>coarse to fine</em>. It looks at a tiny, blurry copy of the frame first to catch big moves cheaply, then refines on larger copies. Each copy is one <em>level</em> of a pyramid. The multiplier says how many frames you see per real frame: 2× means one invented frame between each pair.</p>
+      </div>
+      <figure class="strips" aria-label="Real and generated frames per firmware">
+        <div class="striprow">
+          <div class="lab"><b class="colv v142">≤ 1.4.2 · old engine</b>2× to 4×</div>
+          <div class="strip"><span class="fr">A</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr">B</span></div>
+        </div>
+        <div class="striprow">
+          <div class="lab"><b class="colv v148">1.4.8 · GSFG</b>2× only</div>
+          <div class="strip"><span class="fr">A</span><span class="fr gen">+</span><span class="fr">B</span><span class="fr off">·</span><span class="fr off">·</span><span class="fr off">·</span><span class="fr off">·</span></div>
+        </div>
+        <div class="striprow">
+          <div class="lab"><b class="colv v149">1.4.9 · GSFG</b>2× to 6×</div>
+          <div class="strip"><span class="fr">A</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr gen">+</span><span class="fr">B</span></div>
+        </div>
+        <div class="legend"><span><span class="fr"></span> real frame from the game</span><span><span class="fr gen"></span> invented frame (maximum shown)</span><span><span class="fr off"></span> not possible</span></div>
+      </figure>
+    </section>
+
+    <section id="timeline">
+      <div class="sechead"><div class="eyebrow">History</div><h2>Firmware timeline</h2></div>
+      <ol class="timeline">
+        <li class="old"><div class="when"><b>&lt; 1.3.5</b></div><div class="what">The frame-gen library is a 950 KB placeholder. No AI frame generation yet.</div></li>
+        <li class="old"><div class="when"><b>1.3.5 – 1.3.6</b></div><div class="what">AI frame generation arrives in <code>libGameScopeVK.so</code> (≈2.2 MB).</div></li>
+        <li class="old"><div class="when"><b>1.3.7</b></div><div class="what">A present-path fix: if the compositor connection dies, drop the frame instead of falling back. After this the library stays <strong>byte-for-byte identical through 1.4.2</strong>.</div></li>
+        <li class="old"><div class="when"><b>1.3.8</b></div><div class="what">Only image-codec libraries are renamed. Frame gen is unchanged.</div></li>
+        <li class="old"><div class="when"><b>1.4.1</b></div><div class="what">A second library, <code>libGameScopeV2.so</code>, is added. It's a variant that can disguise the GPU as a desktop card but skips "direct rendering". Both carry the same frame-gen engine.</div></li>
+        <li class="old"><div class="when"><b>1.4.2</b><span>served by BannerHub since 2026-06-07</span></div><div class="what">V2 is rebuilt; frame gen is still the old engine. <strong>This is what our users get today.</strong></div></li>
+        <li class="gap"><div class="when"><b>1.4.3 – 1.4.7</b></div><div class="what">Not examined; we have no copies.</div></li>
+        <li class="key"><div class="when"><b>1.4.8</b><span>2026-09-08 11:12 GMT</span></div><div class="what"><code>libGameScopeVK.so</code> is <strong>deleted</strong>. A new engine, GSFG, moves into V2. It can only make one in-between frame.</div></li>
+        <li class="key"><div class="when"><b>1.4.9</b><span>2026-09-09 08:05 GMT</span></div><div class="what">Only V2 changes: GSFG is retrained and made much smaller, gains 2× to 6×, and benchmarks the GPU on every launch. This is what upstream serves now.</div></li>
+      </ol>
+      <p class="note">Dates for 1.4.8 and 1.4.9 are the upload times on XiaoJi's CDN. The 1.4.8 and 1.4.9 archives are byte-identical except for one file.</p>
+    </section>
+
+    <section id="old">
+      <div class="sechead"><div class="eyebrow">Firmware ≤ 1.4.2</div><h2>The old engine: LSFG's recipe, rebuilt</h2></div>
+      <div class="plain"><span class="lab">In plain words</span><p>A fixed recipe of GPU programs that searches for motion over 7 sizes of the picture, then paints the in-between frame. It came in two flavours, Performance and Quality, and could make 2, 3 or 4 frames per real frame.</p></div>
+      <ol class="pipe old" aria-label="Old engine pipeline">
+        <li><b>Mipmaps</b><span class="p">Shrink both frames into 7 sizes.</span><span class="t">mipmaps</span></li>
+        <li><b>Feature passes</b><span class="p">Prepare images at each size, then a shared detail stack from the finest.</span><span class="t">alpha ×4 per size · beta ×5</span></li>
+        <li><b>Motion, coarse → fine</b><span class="p">Estimate motion size by size, each level building on the last.</span><span class="t">gamma ×5 per size</span></li>
+        <li><b>Refine</b><span class="p">Extra refinement on the 3 finest sizes.</span><span class="t">delta ×10 per size</span></li>
+        <li><b>Generate</b><span class="p">Warp and blend into the new frame.</span><span class="t">generate</span></li>
+      </ol>
+      <ul class="facts col">
+        <li><strong>Libraries:</strong> <code>libGameScopeVK.so</code> (2,219,144 B, sha256 <code>c8f4809c…</code>, the default, with direct rendering) and <code>libGameScopeV2.so</code> (the GPU-spoof variant).</li>
+        <li><strong>Shaders:</strong> 54 GPU programs: two complete frame-gen sets (Performance and Quality) plus 3 texture decoders. Compiled with Google's glslc, debug names stripped.</li>
+        <li><strong>Baked-in numbers:</strong> ≈28.9k fp16 constants inside the shaders (≈30.6k counting every weight slot).</li>
+        <li><strong>Controls:</strong> a 9-byte control file written by the app: on/off, flow scale 0.2–1.0, model 0/1, multiplier 2–4.</li>
+        <li><strong>Where it came from (our August 2026 finding):</strong> the <em>design</em> is derived from LSFG. It uses stage names that only lsfg-vk invented (<code>delta0–9</code>, <code>gamma0–4</code>, <code>generate</code>) and matches LSFG's shader wiring (12 of 13 layouts). It is not a byte copy (different compiler, 0% shared bytes), and its weights are its own, because LSFG has no learned weights to copy.</li>
+      </ul>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Preset (app label)</th><th>Old meaning</th></tr></thead>
+          <tbody>
+            <tr><th>Fast · 省电</th><td>Performance model at flow scale 0.2</td></tr>
+            <tr><th>Smooth · 流畅</th><td>Performance model at 0.4</td></tr>
+            <tr><th>Balanced · 均衡</th><td>Performance model at 0.6 (the default)</td></tr>
+            <tr><th>Enhanced · 增强</th><td>Performance model at 0.8</td></tr>
+            <tr><th>Clear · 清晰</th><td>Quality model at 0.6</td></tr>
+            <tr><th>Extreme · 极致</th><td>Quality model at 0.8</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="v148">
+      <div class="sechead"><div class="eyebrow">Firmware 1.4.8 · 2026-09-08</div><h2>1.4.8: the engine is replaced</h2></div>
+      <div class="plain"><span class="lab">In plain words</span><p>GameHub deleted the old engine and shipped a new one, GSFG, which has <em>learned</em> what motion looks like instead of following a fixed recipe. This first version was big, but it could only ever make one in-between frame (2×).</p></div>
+      <ul class="facts col">
+        <li><strong><code>libGameScopeVK.so</code> is gone.</strong> <code>libGameScopeV2.so</code> (1,921,192 B) is now the only GameScope library, so direct rendering is gone for good. A new <code>libsandboxfs-v2.so</code> also appears; it has nothing to do with frame gen.</li>
+        <li><strong>A new shader set:</strong> 65 GPU programs, 62 of them new, built with Khronos glslangValidator from GLSL with debug names left in (<code>time</code>, <code>global_flow</code>, <code>local_flow</code>…). Only the 3 texture decoders survive from the old engine.</li>
+        <li><strong>153 GPU passes</strong> per pair of real frames.</li>
+        <li><strong>2× is hard-coded.</strong> The one call into the interpolator passes a fixed time of 0.5 (exactly halfway), and the multiplier setting is never read. The frame pacer simply halves the frame interval.</li>
+        <li><strong>The same control file, with a new meaning.</strong> The app still writes model and flow scale, but the engine converts them into a single "motion resolution" percentage. There is only one model now, so "Quality" no longer picks a different network.</li>
+      </ul>
+    </section>
+
+    <section id="v149">
+      <div class="sechead"><div class="eyebrow">Firmware 1.4.9 · 2026-09-09</div><h2>1.4.9: retrained and slimmed</h2></div>
+      <div class="plain"><span class="lab">In plain words</span><p>A day later GameHub shipped a retrained GSFG about a third to a quarter of 1.4.8's size, with a coarser motion map, that can make up to five in-between frames (6×). It also benchmarks your GPU at startup to pick its fastest settings.</p></div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th></th><th><span class="colv v148">1.4.8</span></th><th><span class="colv v149">1.4.9</span></th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><th>GPU passes per frame pair</th><td class="num">153</td><td class="num">110</td><td>Less work per frame</td></tr>
+            <tr><th>Frame encoder</th><td>4 stages: ½ · ¼ · ⅛ · 1/16 size (4 · 8 · 12 · 16 channels)</td><td>3 stages: ¼ · ⅛ · 1/16 size (8 · 8 · 12 channels)</td><td>Loses its finest stage and gets narrower</td></tr>
+            <tr><th>Motion-search width</th><td class="num">24 channels</td><td class="num">12 channels</td><td>Half the "notes" kept per spot</td></tr>
+            <tr><th>Refinement per level</th><td>2 blocks of full 3×3 convolutions (10,416 weights each)</td><td>1 lightweight depthwise block (≈280–470 weights)</td><td>≈40–75× fewer refinement weights</td></tr>
+            <tr><th>Motion search at the 2 finest levels</th><td>yes (5×5 and 3×3 windows)</td><td>no</td><td>Fine detail comes only from refinement</td></tr>
+            <tr><th>Finest motion map</th><td>½ of motion resolution</td><td>¼ of motion resolution</td><td>Coarser edges, thin objects, HUD</td></tr>
+            <tr><th>Internal precision</th><td>16-bit float throughout</td><td>8-bit for the running state (RGBA8 SNORM), 16-bit elsewhere</td><td>Less headroom than 1.4.8 (the old engine was mostly 8-bit too)</td></tr>
+            <tr><th>Weights</th><td class="num">≈44k<span class="sub">≈83k by raw scan</span></td><td class="num">≈14k<span class="sub">≈19.5k by raw scan</span></td><td>3–4× less capacity</td></tr>
+            <tr><th>Compute per frame pair</th><td class="num">≈734 M multiply-adds</td><td class="num">≈347 M multiply-adds</td><td>At a 720p, 100% reference</td></tr>
+            <tr><th>Multiplier</th><td class="hi">2× only</td><td class="gd">2× to 6×</td><td>New multi-frame mode</td></tr>
+            <tr><th>Coarsest pyramid level</th><td>stops at 16 px</td><td>stops at 32 px</td><td>One fewer level, less range for fast motion</td></tr>
+            <tr><th>Startup auto-tuner</th><td>no</td><td>yes</td><td>Speed only, re-run every launch</td></tr>
+            <tr><th>Shared weights with 1.4.8</th><td>n/a</td><td>1 matching run</td><td>Retrained from scratch, not trimmed</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="facts col">
+        <li><strong>How multi-frame works:</strong> the multiplier is clamped to 2–6. Motion is worked out <em>once</em> per pair of real frames, and only the final painting step is repeated for each in-between time (1/m, 2/m, … (m−1)/m).</li>
+        <li><strong>How the tuner works:</strong> at startup it switches to 100% motion resolution and times shader work-group sizes. The default is 8×8; it tries 16×8, 8×16 and 16×16, measuring each 20 times. It keeps a candidate only if it's 2% faster on average <em>and</em> its slowest run beats the default's fastest. Nothing is saved, so it re-tunes every launch.</li>
+        <li><strong>Formats:</strong> the engine's running state (encoder outputs and each level's context) is stored as 8-bit signed values, other working images as 16-bit float, and the final frame as normal 8-bit colour. Host and shaders agree, so this isn't a format bug.</li>
+      </ul>
+    </section>
+
+    <section id="inside">
+      <div class="sechead"><div class="eyebrow">Architecture · 1.4.9</div><h2>Inside GSFG</h2></div>
+      <p class="col">The whole network was recovered from three tables inside the library: every working image (name, size, channels), every GPU pass in running order, and every shader. It's a learned optical-flow network in the PWC-Net family.</p>
+      <ol class="pipe new" aria-label="GSFG pipeline">
+        <li><b>Encoder</b><span class="p">Learns a compact description of each real frame; the same weights run on both frames.</span><span class="t">¼ · ⅛ · 1/16 size + 6 smaller · 42 passes</span></li>
+        <li><b>Global motion search</b><span class="p">Finds big movements, from a 1/512 copy up to ¼ size. At 7 of the 9 levels it compares a 7×7 neighbourhood in both directions.</span><span class="t">9 levels · 98-channel search · 53 passes</span></li>
+        <li><b>Local motion search</b><span class="p">A second guess tuned for small movements.</span><span class="t">⅛ → ¼ size · 11 passes</span></li>
+        <li><b>Selector</b><span class="p">Decides, pixel by pixel, which guess to trust.</span><span class="t">¼ size · 3 passes</span></li>
+        <li><b>Output</b><span class="p">Slides both real frames along both guesses and blends the 4 results at time t.</span><span class="t">full resolution · 1 pass per invented frame</span></li>
+      </ol>
+      <p class="note">The motion levels take the target time <code>t</code> as an input, and levels 9 to 3 reuse the same refine and update shaders (shared weights). The heavy 1×1 "combine" layers read their weights from buffers the host uploads at start-up; the rest have fp16 weights baked into the shader code.</p>
+    </section>
+
+    <section id="side">
+      <div class="sechead"><div class="eyebrow">Comparison</div><h2>Side by side</h2></div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th></th><th><span class="colv v142">≤ 1.4.2 · old</span></th><th><span class="colv v148">1.4.8 · GSFG</span></th><th><span class="colv v149">1.4.9 · GSFG</span></th></tr></thead>
+          <tbody>
+            <tr><th>Engine type</th><td>Fixed recipe, LSFG-style</td><td>Learned optical flow</td><td>Learned optical flow, smaller</td></tr>
+            <tr><th>Library</th><td><code>libGameScopeVK.so</code> (+ V2 variant)</td><td><code>libGameScopeV2.so</code> only</td><td><code>libGameScopeV2.so</code> only</td></tr>
+            <tr><th>GPU programs</th><td class="num">54 (2 model sets)</td><td class="num">65</td><td class="num">53</td></tr>
+            <tr><th>Models to choose from</th><td>Performance / Quality</td><td>one</td><td>one</td></tr>
+            <tr><th>Multiplier</th><td>2× – 4×</td><td class="hi">2× only</td><td class="gd">2× – 6×</td></tr>
+            <tr><th>Weights</th><td class="num">≈30.6k</td><td class="num">≈44k – 83k</td><td class="num">≈14k – 19.5k</td></tr>
+            <tr><th>Finest motion map at Balanced, 1080p</th><td>not measured</td><td class="num">576 × 324</td><td class="num">288 × 162</td></tr>
+            <tr><th>Working-image precision</th><td>mostly 8-bit (41 of 51 images)</td><td>16-bit float</td><td>8-bit state, 16-bit elsewhere</td></tr>
+            <tr><th>Direct rendering</th><td>yes (VK library)</td><td>no</td><td>no</td></tr>
+            <tr><th>GPU-identity spoofing</th><td>V2 library</td><td>yes</td><td>yes</td></tr>
+            <tr><th>Derived from LSFG's design</th><td class="hi">yes</td><td class="gd">no</td><td class="gd">no</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="scale">
+      <div class="sechead"><div class="eyebrow">Motion resolution</div><h2>Motion map, to scale</h2></div>
+      <figure class="scalefig">
+        <svg viewBox="0 0 1920 1080" role="img" aria-label="Game frame 1920 by 1080 with the 1.4.8 finest motion map at 576 by 324 and the 1.4.9 map at 288 by 162, drawn to scale">
+          <rect class="sv-game" x="2" y="2" width="1916" height="1076" rx="8"></rect>
+          <rect class="sv-148" x="3" y="3" width="576" height="324"></rect>
+          <rect class="sv-149" x="3" y="3" width="288" height="162"></rect>
+          <text class="sv-lab-inv" x="24" y="96">1.4.9</text>
+          <text class="sv-lab-strong" x="320" y="290">1.4.8</text>
+          <text class="sv-lab" x="1890" y="1040" text-anchor="end">your game · 1920 × 1080</text>
+        </svg>
+        <div class="keyrow">
+          <span><span class="sw" style="background: var(--v149)"></span>1.4.9 finest motion map · 288 × 162</span>
+          <span><span class="sw" style="background: var(--accent-tint); outline: 2px solid var(--v148)"></span>1.4.8 finest motion map · 576 × 324</span>
+        </div>
+        <figcaption>At the default Balanced preset (60% motion resolution), a 1080p game is analysed at 1152 × 648. 1.4.8 draws its finest motion map at half that; 1.4.9 at a quarter, then stretches it 4× across the screen. The final frame is always painted at full resolution.</figcaption>
+      </figure>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Preset</th><th>What the app sends</th><th>What GSFG does with it</th></tr></thead>
+          <tbody>
+            <tr><th>Fast</th><td>model 0 · 0.2</td><td class="num">20% motion resolution</td></tr>
+            <tr><th>Smooth</th><td>model 0 · 0.4</td><td class="num">40%</td></tr>
+            <tr><th>Balanced</th><td>model 0 · 0.6</td><td class="num">60%</td></tr>
+            <tr><th>Enhanced</th><td>model 0 · 0.8</td><td class="num">80%</td></tr>
+            <tr><th>Clear</th><td>model 1 · 0.6</td><td class="num">90%<span class="sub">0.6 + 0.5 × 0.6</span></td></tr>
+            <tr><th>Extreme</th><td>model 1 · 0.8</td><td class="num">100%<span class="sub">0.6 + 0.5 × 0.8</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">The rule, identical in 1.4.8 and 1.4.9: the flow scale is clamped to 0.2–1.0; "model 1" becomes 0.6 + 0.5 × scale, clamped to 0.8–1.0. The motion size per axis is the game size × that fraction, never below 64 px or above native.</p>
+    </section>
+
+    <section id="lsfg">
+      <div class="sechead"><div class="eyebrow">Provenance</div><h2>Is it a copy of LSFG?</h2></div>
+      <div class="plain"><span class="lab">In plain words</span><p>No. We re-ran the same tests that proved in August that the old engine was built on Lossless Scaling's design. They still fire on the old engine and come up empty on GSFG. GSFG is a different kind of engine, with its own trained weights.</p></div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Test</th><th><span class="colv v142">Old engine ≤ 1.4.2</span></th><th><span class="colv v149">GSFG 1.4.8 / 1.4.9</span></th></tr></thead>
+          <tbody>
+            <tr><th>lsfg-vk's invented stage names</th><td class="hi">16 hits</td><td class="gd">0 (text and UTF-16)</td></tr>
+            <tr><th>LSFG's shader wiring</th><td class="hi">12 of 13 layouts · 37 / 54 shaders · the rare 12-in/2-out and five 4-in/4-out shapes</td><td class="gd">2 / 65 and 2 / 53, generic shapes only</td></tr>
+            <tr><th>Pass structure</th><td class="hi">LSFG's own stages and 7 sizes</td><td class="gd">9-level learned encoder and search, 2 frames, no stage maps one-to-one</td></tr>
+            <tr><th>Byte overlap with Lossless.dll</th><td>noise</td><td>noise (≤ 0.01%)</td></tr>
+            <tr><th>Weights</th><td>its own; LSFG has none</td><td class="gd">its own; 0 matching runs vs the old engine</td></tr>
+            <tr><th>Toolchain</th><td>Google glslc, stripped</td><td>glslangValidator, GLSL 450, debug names kept</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="chips">
+        <span class="chip okc"><b>Byte or shader copy:</b> no · high confidence</span>
+        <span class="chip okc"><b>Design derived from LSFG:</b> no evidence · medium-high</span>
+        <span class="chip okc"><b>Weights copied:</b> no · high confidence</span>
+      </div>
+      <p class="note">What's still in common (coarse-to-fine motion, warping by time, blending two warped frames) is shared by all modern frame interpolation. Binaries can't show whether GameHub trained GSFG to imitate LSFG's output or took ideas from reading lsfg-vk. The host code still comes from the same <code>/Users/me/Documents/GameScopeVK</code> source tree, with a new <code>gsfg_interpolator</code> namespace.</p>
+    </section>
+
+    <section id="worse">
+      <div class="sechead"><div class="eyebrow">Likely causes · untested</div><h2>Why it may look worse</h2></div>
+      <ol class="ranked col">
+        <li><strong>A coarse motion map.</strong> Motion is worked out at a quarter of the motion resolution and stretched 4× on screen. Expect soft or haloed edges and trouble with thin objects and HUD text.</li>
+        <li><strong>A much smaller model.</strong> Half the channels, one refinement block instead of two, and no fine-level search: 3–4× fewer weights than 1.4.8.</li>
+        <li><strong>8-bit internal state.</strong> Encoder features and each level's context are stored with 256 steps instead of 1.4.8's 16-bit. The old engine also used mostly 8-bit working images, so this alone probably isn't the main cause.</li>
+        <li><strong>"Quality" presets no longer pick a better model.</strong> There is only one model; Clear and Extreme only raise the resolution.</li>
+        <li><strong>Less range for fast motion.</strong> The pyramid now stops one level earlier.</li>
+        <li><strong>Errors multiply at 3–6×.</strong> One motion estimate is reused for every invented frame.</li>
+      </ol>
+    </section>
+
+    <section id="us">
+      <div class="sechead"><div class="eyebrow">Action</div><h2>What it means for BannerHub</h2></div>
+      <ul class="facts col">
+        <li><strong>Hold at 1.4.2.</strong> The API keeps serving firmware 1.4.2 (versionCode 32) to every client. Every surface was verified live on 2026-09-11, and the hold stays until it's lifted.</li>
+        <li><strong>Our clients point at the deleted library.</strong> BannerHub (<code>BhFrameGenWriter.java:110</code>), BannerHub Lite (<code>BhVulkanIcdWriter.java:61</code>) and BannerHub v6 (<code>BhGpuSpoofController.java:66</code>) all default to <code>libGameScopeVK.so</code>. Serving 1.4.8+ as-is would leave frame gen pointing at nothing, or break Vulkan start-up, depending on the client.</li>
+        <li><strong>GSFG turns itself off silently</strong> when X11 Present idle notifications can't be registered, or when the GPU lacks <code>shaderFloat16</code> or <code>storageBuffer16BitAccess</code>.</li>
+        <li><strong>If we ever want to judge it properly:</strong> run a side-by-side device test of 1.4.2 against 1.4.9 in the same game, with the client patched to use V2.</li>
+      </ul>
+    </section>
+
+    <section id="gloss">
+      <div class="sechead"><div class="eyebrow">Plain-language reference</div><h2>Glossary</h2></div>
+      <dl class="gloss">
+        <div><dt>Frame generation</dt><dd>Inventing extra frames between the real ones so motion looks smoother.</dd></div>
+        <div><dt>Optical flow / motion map</dt><dd>A picture-sized map saying where each spot moved between two frames.</dd></div>
+        <div><dt>Warp</dt><dd>Sliding a frame's pixels along the motion map.</dd></div>
+        <div><dt>Pyramid · level</dt><dd>Smaller and smaller copies of a frame. Search the tiny one first, then refine on bigger ones.</dd></div>
+        <div><dt>Search window (cost volume)</dt><dd>For each spot, how well it matches each nearby position in the other frame. 7×7 means 49 positions checked.</dd></div>
+        <div><dt>Weights · parameters</dt><dd>The learned numbers inside a neural network. More weights means more capacity for hard cases.</dd></div>
+        <div><dt>Channels</dt><dd>How many values the engine keeps for each spot on its internal maps.</dd></div>
+        <div><dt>Precision</dt><dd>How finely each value is stored. 8-bit has 256 steps; 16-bit float is far finer.</dd></div>
+        <div><dt>Pass (dispatch)</dt><dd>One GPU program run. More passes usually means more time per frame.</dd></div>
+        <div><dt>Shader · SPIR-V</dt><dd>The GPU programs, and the compiled form Vulkan loads.</dd></div>
+        <div><dt>Motion resolution</dt><dd>The size GSFG analyses frames at, as a percentage of the game's resolution.</dd></div>
+        <div><dt>Multiplier</dt><dd>Frames shown per real frame. 2× adds one; 6× adds five.</dd></div>
+        <div><dt>ICD</dt><dd>The Vulkan driver entry GameHub uses to slip frame gen in front of the real GPU driver.</dd></div>
+        <div><dt>LSFG · lsfg-vk</dt><dd>Lossless Scaling Frame Generation, and the open-source Linux project that runs it and named its stages.</dd></div>
+      </dl>
+    </section>
+
+    <section id="method">
+      <div class="sechead"><div class="eyebrow">Method</div><h2>Method and sources</h2></div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>File</th><th>md5</th><th>Size</th><th>Frame-gen library</th></tr></thead>
+          <tbody>
+            <tr><th><span class="colv v142">imagefs 1.4.2</span></th><td class="mono">6bcdc2568d26d6dbe90468fcdb4490ce</td><td class="num">173,024,718 B</td><td>VK sha256 <span class="mono">c8f4809c…</span> · V2 build <span class="mono">55b8a670…</span></td></tr>
+            <tr><th><span class="colv v148">firmware 1.4.8</span></th><td class="mono">404fad677c7e01c0867d58ceeaf93b6b</td><td class="num">199,356,131 B</td><td>V2 1,921,192 B · build <span class="mono">c257e612…</span></td></tr>
+            <tr><th><span class="colv v149">firmware 1.4.9</span></th><td class="mono">d6b20567d604311aed786c6f1bc684be</td><td class="num">201,193,073 B</td><td>V2 2,001,072 B · build <span class="mono">7ce5d041…</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="facts col">
+        <li>1.4.8 and 1.4.9 were checked against XiaoJi's CDN (their md5-addressed paths, sizes and upload times).</li>
+        <li>We compared every file in each archive, carved and validated every shader, recovered GSFG's working-image, pass and shader tables, and disassembled the control, multiplier, tuner and format code (ARM64).</li>
+        <li>The LSFG tests re-used the August 2026 method against both Lossless.dll builds and lsfg-vk's source.</li>
+        <li><strong>Caveats:</strong> this is static analysis only, with no image-quality measurement. Weight totals depend on the counting method (a layer-by-layer count vs a raw scan). How 1.4.8's per-level weights are bound wasn't fully resolved. 1.4.3–1.4.7 were not examined.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <span>GameHub Frame Gen Teardown</span>
+    <span>Prepared 2026-09-11</span>
+    <span>Static analysis of upstream firmware · not device-tested</span>
+  </footer>
+</div>
+</body>
+</html>
