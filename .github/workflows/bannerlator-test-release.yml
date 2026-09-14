@@ -1,0 +1,89 @@
+# Publish a Bannerlator TEST build as a pre-release in this repo, entirely server-side: the APKs
+# are fetched from a green Bannerlator CI run (checked against the expected commit) and attached
+# here, so experimental builds stay off Bannerlator's own release page until they are ready.
+name: Bannerlator test build release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Bannerlator CI run id that built the APKs'
+        required: true
+      expected_sha:
+        description: 'Commit that run must have built (7+ leading chars)'
+        required: true
+      tag:
+        description: 'Release tag in this repo (e.g. bannerlator-hdr-test-r1)'
+        required: true
+      title:
+        description: 'Release title'
+        required: true
+      asset_prefix:
+        description: 'APK file name prefix (e.g. Bannerlator-hdr-r1)'
+        required: true
+        default: 'Bannerlator-test'
+      flavours:
+        description: 'APK flavours to attach (space separated)'
+        required: true
+        default: 'standard pubg ludashi'
+      notes_path:
+        description: 'Notes file in The412Banner/Bannerlator at that commit (optional)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Fetch the APKs and publish the pre-release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RUN: ${{ inputs.run_id }}
+        SHA: ${{ inputs.expected_sha }}
+        TAG: ${{ inputs.tag }}
+        TITLE: ${{ inputs.title }}
+        PREFIX: ${{ inputs.asset_prefix }}
+        FLAVOURS: ${{ inputs.flavours }}
+        NOTES_PATH: ${{ inputs.notes_path }}
+      run: |
+        set -euo pipefail
+        SRC=The412Banner/Bannerlator
+        info=$(gh run view "$RUN" -R "$SRC" --json headSha,conclusion,headBranch)
+        echo "$info"
+        hs=$(echo "$info" | jq -r .headSha)
+        concl=$(echo "$info" | jq -r .conclusion)
+        [ "$concl" = "success" ] || { echo "run $RUN is not green ($concl)"; exit 1; }
+        case "$hs" in "$SHA"*) ;; *) echo "run $RUN built $hs, expected $SHA"; exit 1 ;; esac
+        mkdir -p dist
+        for f in $FLAVOURS; do
+          gh run download "$RUN" -R "$SRC" -n "Bannerlator-1.0-test-$f" -D "dl-$f"
+          apk=$(find "dl-$f" -name '*.apk' | head -1)
+          [ -n "$apk" ] || { echo "no APK in artifact for $f"; exit 1; }
+          cp "$apk" "dist/${PREFIX}-${f}.apk"
+        done
+        (cd dist && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt)
+        if [ -n "$NOTES_PATH" ]; then
+          gh api "repos/$SRC/contents/$NOTES_PATH?ref=$hs" --jq .content | base64 -d > notes.md
+        else
+          echo "Bannerlator test build." > notes.md
+        fi
+        {
+          echo
+          echo "---"
+          echo "**Test build — not a Bannerlator release.** Built by [The412Banner/Bannerlator run $RUN](https://github.com/$SRC/actions/runs/$RUN) from commit \`$hs\` (branch \`$(echo "$info" | jq -r .headBranch)\`)."
+          echo
+          echo '```'
+          cat dist/SHA256SUMS.txt
+          echo '```'
+        } >> notes.md
+        if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          gh release upload "$TAG" dist/* --clobber -R "$GITHUB_REPOSITORY"
+          gh release edit "$TAG" --title "$TITLE" --notes-file notes.md -R "$GITHUB_REPOSITORY"
+        else
+          gh release create "$TAG" dist/* --prerelease --latest=false --target "$GITHUB_SHA" \
+            --title "$TITLE" --notes-file notes.md -R "$GITHUB_REPOSITORY"
+        fi
+        gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json url,assets --jq '.url, (.assets[] | "  \(.name) \(.size)")'
