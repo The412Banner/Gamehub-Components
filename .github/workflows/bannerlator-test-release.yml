@@ -27,7 +27,11 @@ on:
         required: true
         default: 'standard pubg ludashi'
       notes_path:
-        description: 'Notes file in The412Banner/Bannerlator at that commit (optional)'
+        description: 'Notes file in The412Banner/Bannerlator (optional)'
+        required: false
+        default: ''
+      notes_ref:
+        description: 'Commit/branch to read the notes file from (default: the built commit)'
         required: false
         default: ''
 
@@ -48,6 +52,7 @@ jobs:
         PREFIX: ${{ inputs.asset_prefix }}
         FLAVOURS: ${{ inputs.flavours }}
         NOTES_PATH: ${{ inputs.notes_path }}
+        NOTES_REF: ${{ inputs.notes_ref }}
       run: |
         set -euo pipefail
         SRC=The412Banner/Bannerlator
@@ -66,7 +71,7 @@ jobs:
         done
         (cd dist && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt)
         if [ -n "$NOTES_PATH" ]; then
-          gh api "repos/$SRC/contents/$NOTES_PATH?ref=$hs" --jq .content | base64 -d > notes.md
+          gh api "repos/$SRC/contents/$NOTES_PATH?ref=${NOTES_REF:-$hs}" --jq .content | base64 -d > notes.md
         else
           echo "Bannerlator test build." > notes.md
         fi
