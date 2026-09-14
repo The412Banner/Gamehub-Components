@@ -63,8 +63,12 @@ jobs:
         [ "$concl" = "success" ] || { echo "run $RUN is not green ($concl)"; exit 1; }
         case "$hs" in "$SHA"*) ;; *) echo "run $RUN built $hs, expected $SHA"; exit 1 ;; esac
         mkdir -p dist
+        names=$(gh api "repos/$SRC/actions/runs/$RUN/artifacts" --jq '.artifacts[].name')
+        echo "artifacts in run $RUN:"; echo "$names"
         for f in $FLAVOURS; do
-          gh run download "$RUN" -R "$SRC" -n "Bannerlator-1.0-test-$f" -D "dl-$f"
+          art=$(echo "$names" | grep -E -- "-${f}\$" | head -1)
+          [ -n "$art" ] || { echo "no artifact for flavour $f"; exit 1; }
+          gh run download "$RUN" -R "$SRC" -n "$art" -D "dl-$f"
           apk=$(find "dl-$f" -name '*.apk' | head -1)
           [ -n "$apk" ] || { echo "no APK in artifact for $f"; exit 1; }
           cp "$apk" "dist/${PREFIX}-${f}.apk"
