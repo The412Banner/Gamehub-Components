@@ -34,6 +34,26 @@ on:
         description: 'Commit/branch to read the notes file from (default: the built commit)'
         required: false
         default: ''
+      notes_extra:
+        description: 'Markdown put above the notes file (optional)'
+        required: false
+        default: ''
+      wcp_run_id:
+        description: 'proton-wine CI run that built a layer to attach too (optional)'
+        required: false
+        default: ''
+      wcp_artifact:
+        description: 'Artifact name in that run'
+        required: false
+        default: 'proton-arm64ec-sdk28'
+      wcp_name:
+        description: 'File name for the layer on the release'
+        required: false
+        default: ''
+      wcp_sha256:
+        description: 'sha256 the layer must have (the device-proven build)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -53,6 +73,11 @@ jobs:
         FLAVOURS: ${{ inputs.flavours }}
         NOTES_PATH: ${{ inputs.notes_path }}
         NOTES_REF: ${{ inputs.notes_ref }}
+        NOTES_EXTRA: ${{ inputs.notes_extra }}
+        WCP_RUN: ${{ inputs.wcp_run_id }}
+        WCP_ART: ${{ inputs.wcp_artifact }}
+        WCP_NAME: ${{ inputs.wcp_name }}
+        WCP_SHA: ${{ inputs.wcp_sha256 }}
       run: |
         set -euo pipefail
         SRC=The412Banner/Bannerlator
@@ -73,11 +98,21 @@ jobs:
           [ -n "$apk" ] || { echo "no APK in artifact for $f"; exit 1; }
           cp "$apk" "dist/${PREFIX}-${f}.apk"
         done
-        (cd dist && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt)
+        if [ -n "$WCP_RUN" ]; then
+          [ -n "$WCP_NAME" ] && [ -n "$WCP_SHA" ] || { echo "wcp_name and wcp_sha256 are required with wcp_run_id"; exit 1; }
+          gh run download "$WCP_RUN" -R The412Banner/proton-wine -n "$WCP_ART" -D dl-wcp
+          wcp=$(find dl-wcp -name '*.wcp' | head -1)
+          [ -n "$wcp" ] || { echo "no .wcp in $WCP_ART of run $WCP_RUN"; exit 1; }
+          cp "$wcp" "dist/$WCP_NAME"
+          echo "$WCP_SHA  dist/$WCP_NAME" | sha256sum -c -
+        fi
+        (cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt)
+        : > notes.md
+        if [ -n "$NOTES_EXTRA" ]; then printf '%s\n\n' "$NOTES_EXTRA" > notes.md; fi
         if [ -n "$NOTES_PATH" ]; then
-          gh api "repos/$SRC/contents/$NOTES_PATH?ref=${NOTES_REF:-$hs}" --jq .content | base64 -d > notes.md
+          gh api "repos/$SRC/contents/$NOTES_PATH?ref=${NOTES_REF:-$hs}" --jq .content | base64 -d >> notes.md
         else
-          echo "Bannerlator test build." > notes.md
+          echo "Bannerlator test build." >> notes.md
         fi
         {
           echo
