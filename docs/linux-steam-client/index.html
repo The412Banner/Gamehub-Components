@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linux Steam on Android</title>
+<meta name="description" content="How Valve's native ARM64 Linux Steam client came to run on Android phones with no root — explained from zero, for people who have never touched Linux.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #F1F4F8;
+    --surface: #FFFFFF;
+    --surface-2: #E6EBF2;
+    --ink: #131820;
+    --muted: #59636F;
+    --rule: #D2DAE4;
+    --accent: #0E6E7D;
+    --accent-tint: #DCEEF1;
+    --lane-linux: #0E6E7D;
+    --lane-linux-tint: #DCEEF1;
+    --lane-valve: #7A4E9C;
+    --lane-valve-tint: #EDE4F5;
+    --lane-win: #9A5B14;
+    --lane-win-tint: #F6EBD9;
+    --ok: #1D7A4E;
+    --warn: #A95B0B;
+    --bad: #B0281F;
+    --display: "Archivo", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+    --body: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0D1117;
+      --surface: #141A22;
+      --surface-2: #1B222C;
+      --ink: #E4EAF1;
+      --muted: #96A1AE;
+      --rule: #28313D;
+      --accent: #5BC7D7;
+      --accent-tint: #103039;
+      --lane-linux: #5BC7D7;
+      --lane-linux-tint: #103039;
+      --lane-valve: #C09BE0;
+      --lane-valve-tint: #241A33;
+      --lane-win: #E0A85A;
+      --lane-win-tint: #2C2213;
+      --ok: #5CC690;
+      --warn: #F2A64B;
+      --bad: #FF7B70;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0D1117;
+    --surface: #141A22;
+    --surface-2: #1B222C;
+    --ink: #E4EAF1;
+    --muted: #96A1AE;
+    --rule: #28313D;
+    --accent: #5BC7D7;
+    --accent-tint: #103039;
+    --lane-linux: #5BC7D7;
+    --lane-linux-tint: #103039;
+    --lane-valve: #C09BE0;
+    --lane-valve-tint: #241A33;
+    --lane-win: #E0A85A;
+    --lane-win-tint: #2C2213;
+    --ok: #5CC690;
+    --warn: #F2A64B;
+    --bad: #FF7B70;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.62;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 0 64px;
+  }
+
+  /* ---- header ---- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--paper);
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .topbar-in {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 18px;
+  }
+  .mark {
+    font-family: var(--display);
+    font-weight: 800;
+    font-stretch: 88%;
+    letter-spacing: .01em;
+    font-size: 15px;
+    text-transform: uppercase;
+  }
+  .mark span { color: var(--accent); }
+  .topnav { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--display); font-size: 13.5px; font-weight: 600; }
+  .topnav a { color: var(--muted); text-decoration: none; }
+  .topnav a:hover, .topnav a:focus-visible { color: var(--accent); }
+
+  /* ---- hero ---- */
+  .hero { padding-block: 44px 8px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-stretch: 84%;
+    font-size: clamp(2.3rem, 7.4vw, 4.05rem);
+    line-height: 0.98;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+  .standfirst { font-size: 1.2rem; color: var(--ink); max-width: 64ch; margin: 0 0 20px; }
+  .standfirst strong { font-weight: 700; }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-stretch: 88%;
+    font-size: clamp(1.5rem, 3.6vw, 2rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin: 56px 0 6px;
+    text-wrap: balance;
+  }
+  h2 + .kicker { color: var(--muted); font-size: 1rem; margin: 0 0 20px; max-width: 62ch; }
+  h3 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.16rem;
+    margin: 30px 0 8px;
+  }
+  p { max-width: 66ch; margin: 0 0 16px; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  code, .mono { font-family: var(--mono); font-size: .875em; }
+  code { background: var(--surface-2); padding: 1px 5px; border-radius: 3px; }
+  strong { font-weight: 700; }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 52px 0 0; }
+
+  /* ---- pull quote ---- */
+  .pull {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    padding: 16px 20px;
+    margin: 0 0 24px;
+    border-radius: 0 6px 6px 0;
+  }
+  .pull p { margin: 0 0 8px; font-size: 1.05rem; }
+  .pull p:last-child { margin: 0; }
+  .pull cite { display: block; font-family: var(--display); font-size: 12.5px; font-style: normal; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+
+  /* ---- definition grid ---- */
+  .defs { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 0 0 8px; }
+  .def { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; }
+  .def dt { font-family: var(--display); font-weight: 700; font-size: 1.02rem; margin: 0 0 4px; }
+  .def dd { margin: 0; font-size: .95rem; color: var(--muted); }
+  .def dd b { color: var(--ink); font-weight: 600; }
+
+  /* ---- walls: two-column pairs ---- */
+  .walls { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+  .wall { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); }
+  .wall > div { background: var(--surface); padding: 14px 16px; }
+  .wall .t { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 0 0 5px; }
+  .wall .no .t { color: var(--bad); }
+  .wall .yes .t { color: var(--ok); }
+  .wall p { margin: 0; font-size: .95rem; max-width: none; }
+  @media (max-width: 560px) { .wall { grid-template-columns: 1fr; } }
+
+  /* ---- tables ---- */
+  .scroller { overflow-x: auto; margin: 0 0 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; min-width: 480px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--muted); background: var(--surface-2); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tag { font-family: var(--display); font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; white-space: nowrap; display: inline-block; }
+  .tag.ok { color: var(--ok); background: var(--surface-2); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+  .tag.warn { color: var(--warn); background: var(--surface-2); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+  .tag.bad { color: var(--bad); background: var(--surface-2); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+  caption { caption-side: bottom; text-align: left; padding: 10px 14px; color: var(--muted); font-size: .86rem; border-top: 1px solid var(--rule); }
+
+  /* ---- figures ---- */
+  figure { margin: 24px 0 8px; }
+  .figbox { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 16px 12px 8px; overflow-x: auto; }
+  figure svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 460px; color: var(--ink); }
+  figcaption { color: var(--muted); font-size: .88rem; margin-top: 10px; max-width: 70ch; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--display); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 12px 0 0; }
+  .legend i { display: inline-block; width: 22px; height: 0; border-top: 3px solid currentColor; vertical-align: middle; margin-right: 6px; }
+  .lg-ours { color: var(--lane-linux); }
+  .lg-valve { color: var(--lane-valve); }
+  .lg-win { color: var(--lane-win); }
+
+  /* ---- callouts ---- */
+  .note { border: 1px solid var(--rule); border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 20px 0; }
+  .note.caution { border-left-color: var(--warn); }
+  .note .lab { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .note p { margin: 0 0 10px; font-size: .97rem; }
+  .note p:last-child { margin: 0; }
+
+  /* ---- faq ---- */
+  .faq { border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); overflow: hidden; }
+  details { border-bottom: 1px solid var(--rule); }
+  details:last-child { border-bottom: 0; }
+  summary { cursor: pointer; padding: 13px 16px; font-family: var(--display); font-weight: 700; font-size: 1.02rem; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "+"; color: var(--accent); font-family: var(--mono); margin-right: 10px; font-weight: 600; }
+  details[open] summary::before { content: "–"; }
+  details > *:not(summary) { padding-inline: 16px; }
+  details p { font-size: .96rem; }
+  details > p:last-child { padding-bottom: 14px; }
+
+  /* ---- footer ---- */
+  footer { border-top: 1px solid var(--rule); margin-top: 56px; padding-top: 24px; color: var(--muted); font-size: .9rem; }
+  footer p { max-width: 70ch; }
+  footer strong { color: var(--ink); }
+
+  ul.plain { max-width: 66ch; padding-left: 20px; }
+  ul.plain li { margin-bottom: 8px; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="mark">Linux&nbsp;Steam <span>/ Android</span></div>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#zero">Start here</a>
+      <a href="#roads">Two roads</a>
+      <a href="#noroot">Without root</a>
+      <a href="#wayland">Wayland</a>
+      <a href="#apps">The three apps</a>
+      <a href="#ledger">What works</a>
+      <a href="#faq">Questions</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Explainer · September 2026</p>
+    <h1>Valve's Linux Steam client now runs on an Android phone. No root.</h1>
+    <p class="standfirst">Not Wine pretending to be Steam. Not a streaming app. <strong>Valve's own Steam
+    client for ARM Linux</strong> — the same build a Steam Deck-class ARM device would run — executing on your
+    phone as ordinary ARM code, signing in, downloading from the store, and launching Windows games through
+    Valve's own Proton.</p>
+    <div class="pull">
+      <p>“Max and I have been working hard on bringing everyone a true Linux Steam client running on Android
+      without root requirements. His work with Gamescope and mine using Wayland has unlocked a powerful future
+      for us all. No longer need to flash or dual-boot ArmadaOS or Rocknix — it comes straight to you via
+      Bannerlator, WinNative, or a standalone app.”</p>
+      <cite>The412Banner, announcing it in #gamescope-linux-steam-client</cite>
+    </div>
+    <p>The first reply in that channel was, roughly: <em>I still don't know what any of this means.</em>
+    Fair. This page is that answer, written for someone who has never used Linux and does not want to
+    start now.</p>
+  </header>
+
+  <hr>
+
+  <h2 id="zero">Start here: six words that do all the work</h2>
+  <p class="kicker">Skip this if you already know what Proton is.</p>
+
+  <dl class="defs">
+    <div class="def"><dt>Operating system</dt><dd>The software a device actually boots. Your phone runs <b>Android</b>. Your PC runs <b>Windows</b>. A Steam Deck runs <b>Linux</b>. Programs are built for one of them and normally will not run on another.</dd></div>
+    <div class="def"><dt>x86 and ARM</dt><dd>Two different machine languages. PC games are written in <b>x86</b>. Your phone's chip speaks <b>ARM</b>. Different words, not just a different accent — something has to translate.</dd></div>
+    <div class="def"><dt>Wine</dt><dd>Not an emulator. A <b>re-implementation of Windows' own plumbing</b>, so a Windows program's requests are answered by something that isn't Windows. It handles the operating system gap, not the chip gap.</dd></div>
+    <div class="def"><dt>Proton</dt><dd>Valve's packaged Wine, tuned for games, shipped through Steam. It is <b>how a Steam Deck plays Windows games</b> while running Linux.</dd></div>
+    <div class="def"><dt>Vulkan</dt><dd>The modern graphics language phones and PCs share. Games speak <b>DirectX</b>; something must convert it. Vulkan is the common ground that makes all of this possible at all.</dd></div>
+    <div class="def"><dt>Compositor</dt><dd>The thing that takes finished pictures from programs and puts them on the screen in the right order. Android has one. Linux needs one. <b>We wrote one that lives inside the app.</b></dd></div>
+  </dl>
+
+  <h2 id="roads">Two roads to the same Windows game</h2>
+  <p class="kicker">This is the whole story in one picture. The rows are the same on both sides; what changes is
+  who supplies each piece.</p>
+
+  <p>Bannerlator has always taken the left road: <strong>we build everything ourselves</strong> and run it as
+  an Android app. The new work adds the right road: <strong>build a small Linux system instead, and let Valve's
+  own software do its own job inside it.</strong></p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 760 500" role="img" aria-label="Two vertical pipelines side by side. Left: app-side Wine, where Bannerlator supplies Wine, FEX, DXVK, the Turnip driver and the display server. Right: the native Linux Steam client, where Valve supplies Steam, Proton, its Wine, FEX and DXVK, and we supply only the Turnip driver and the Wayland compositor. Both end at the same Android screen.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+
+        <text x="20" y="18" font-family="Archivo, sans-serif" font-size="13" font-weight="700" style="fill:var(--lane-win)">THE APP-SIDE ROAD</text>
+        <text x="20" y="34" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor" opacity="0.65">Bannerlator / WinNative, as always</text>
+        <text x="400" y="18" font-family="Archivo, sans-serif" font-size="13" font-weight="700" style="fill:var(--lane-valve)">THE LINUX ROAD</text>
+        <text x="400" y="34" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor" opacity="0.65">new — Valve's client, our plumbing</text>
+
+        <!-- row 1: the game (shared concept) -->
+        <rect x="20" y="48" width="340" height="40" rx="5" stroke="currentColor" stroke-width="1.2" style="fill:var(--surface-2)"></rect>
+        <text x="190" y="73" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" fill="currentColor">Your Windows game — an .exe, built for x86</text>
+        <rect x="400" y="48" width="340" height="40" rx="5" stroke="currentColor" stroke-width="1.2" style="fill:var(--surface-2)"></rect>
+        <text x="570" y="73" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" fill="currentColor">The same .exe, installed by Steam itself</text>
+
+        <!-- row 2: windows plumbing -->
+        <rect x="20" y="108" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-win-tint);stroke:var(--lane-win)"></rect>
+        <text x="190" y="128" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">Wine — ours</text>
+        <text x="190" y="143" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">built for Android's C library, as arm64ec</text>
+        <rect x="400" y="108" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-valve-tint);stroke:var(--lane-valve)"></rect>
+        <text x="570" y="128" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">Wine — Valve's, inside Proton ARM64</text>
+        <text x="570" y="143" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">downloaded by Steam like any other depot</text>
+
+        <!-- row 3: x86 translation -->
+        <rect x="20" y="168" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-win-tint);stroke:var(--lane-win)"></rect>
+        <text x="190" y="188" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">FEX — ours</text>
+        <text x="190" y="203" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">x86 instructions → ARM instructions</text>
+        <rect x="400" y="168" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-valve-tint);stroke:var(--lane-valve)"></rect>
+        <text x="570" y="188" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">FEX — Valve's, inside Proton</text>
+        <text x="570" y="203" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">same job, their build, their bug fixes</text>
+
+        <!-- row 4: graphics translation -->
+        <rect x="20" y="228" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-win-tint);stroke:var(--lane-win)"></rect>
+        <text x="190" y="248" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">DXVK / VKD3D — ours</text>
+        <text x="190" y="263" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">DirectX → Vulkan</text>
+        <rect x="400" y="228" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-valve-tint);stroke:var(--lane-valve)"></rect>
+        <text x="570" y="248" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">DXVK / VKD3D — Valve's</text>
+        <text x="570" y="263" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">DirectX → Vulkan</text>
+
+        <!-- row 5: driver -->
+        <rect x="20" y="288" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-linux-tint);stroke:var(--lane-linux)"></rect>
+        <text x="190" y="308" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">Turnip driver — ours (Android build)</text>
+        <text x="190" y="323" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">talks to the Adreno GPU</text>
+        <rect x="400" y="288" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-linux-tint);stroke:var(--lane-linux)"></rect>
+        <text x="570" y="308" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">Turnip driver — ours (Linux build)</text>
+        <text x="570" y="323" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">same GPU, rebuilt for the Linux side</text>
+
+        <!-- row 6: display -->
+        <rect x="20" y="348" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-linux-tint);stroke:var(--lane-linux)"></rect>
+        <text x="190" y="368" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">Our X11 server or Wayland compositor</text>
+        <text x="190" y="383" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">one game window, ours to place</text>
+        <rect x="400" y="348" width="340" height="44" rx="5" stroke-width="1.8" style="fill:var(--lane-linux-tint);stroke:var(--lane-linux)"></rect>
+        <text x="570" y="365" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" font-weight="700" fill="currentColor">gamescope → our Wayland compositor</text>
+        <text x="570" y="380" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">Valve's game compositor, as our client</text>
+
+        <!-- arrows down each lane -->
+        <g stroke="currentColor" stroke-width="1.3" marker-end="url(#ar)" opacity="0.55">
+          <line x1="190" y1="88" x2="190" y2="106"></line>
+          <line x1="190" y1="152" x2="190" y2="166"></line>
+          <line x1="190" y1="212" x2="190" y2="226"></line>
+          <line x1="190" y1="272" x2="190" y2="286"></line>
+          <line x1="190" y1="332" x2="190" y2="346"></line>
+          <line x1="190" y1="392" x2="190" y2="424"></line>
+          <line x1="570" y1="88" x2="570" y2="106"></line>
+          <line x1="570" y1="152" x2="570" y2="166"></line>
+          <line x1="570" y1="212" x2="570" y2="226"></line>
+          <line x1="570" y1="272" x2="570" y2="286"></line>
+          <line x1="570" y1="332" x2="570" y2="346"></line>
+          <line x1="570" y1="392" x2="570" y2="424"></line>
+        </g>
+
+        <!-- shared screen -->
+        <rect x="20" y="426" width="720" height="40" rx="5" stroke-width="1.8" style="fill:var(--accent-tint);stroke:var(--accent)"></rect>
+        <text x="380" y="451" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13.5" font-weight="700" fill="currentColor">Android hands the finished frame to your screen</text>
+
+        <text x="380" y="486" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.6">the game never knows which road it took</text>
+      </svg>
+      <p class="legend">
+        <span class="lg-win"><i></i>Windows plumbing we build</span>
+        <span class="lg-valve"><i></i>Valve's own software, unmodified</span>
+        <span class="lg-ours"><i></i>Our Android-side pieces</span>
+      </p>
+    </div>
+    <figcaption>The same seven steps, different owners. On the right road we stopped building the Windows
+    half — Valve's Proton does it — and kept only the two pieces that have to know about Android: the GPU
+    driver and the compositor that puts frames on the panel.</figcaption>
+  </figure>
+
+  <h3>Why the right road is worth the trouble</h3>
+  <p>On the left road, every Windows-side fix is ours to make. When a game needs a newer Wine, we build one.
+  When Valve improves Proton, we port it. The game also has no idea Steam exists: to install and update
+  games, Bannerlator implements Steam's own download protocol itself.</p>
+  <p>On the right road, <strong>the Steam client is the real thing</strong>. Your library, cloud saves, the
+  store, downloads, updates, friends, Big Picture, controller mapping — that is Valve's code doing its normal
+  work. When Valve ships a better Proton for ARM, Steam downloads it by itself, like on a Deck.</p>
+
+  <h2 id="noroot">A Linux system inside an app, with no root</h2>
+  <p class="kicker">This is the part people assume is impossible, and the part Max's work cracked.</p>
+
+  <p>Android <em>is</em> Linux underneath — but a locked-down one. You cannot become the administrator, you
+  cannot mount a second filesystem, and an app lives inside a sandbox designed to stop exactly this. So
+  rather than fight the phone, the runtime works entirely inside what an ordinary app is already allowed
+  to do.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 700 430" role="img" aria-label="A layered stack. The Android app at the bottom supplies a Wayland compositor, an audio server and a synthetic gamepad. Above it proot creates a fake filesystem root with no root access, containing a 790 megabyte Linux system, inside which gamescope runs Valve's Steam client, which runs Proton ARM64 and FEX to play a Windows game.">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+
+        <!-- proot boundary -->
+        <rect x="24" y="14" width="652" height="258" rx="8" fill="none" stroke-width="1.6" stroke-dasharray="7 5" style="stroke:var(--lane-valve)"></rect>
+        <text x="40" y="34" font-family="Archivo, sans-serif" font-size="12" font-weight="700" style="fill:var(--lane-valve)">INSIDE THE FAKE ROOT — an ordinary Linux world, as far as the programs in it can tell</text>
+
+        <rect x="48" y="44" width="604" height="40" rx="5" stroke="currentColor" stroke-width="1.2" style="fill:var(--surface-2)"></rect>
+        <text x="350" y="69" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" fill="currentColor">Your Windows game (.exe, x86) — installed by Steam</text>
+
+        <rect x="48" y="98" width="604" height="40" rx="5" stroke-width="1.6" style="fill:var(--lane-valve-tint);stroke:var(--lane-valve)"></rect>
+        <text x="350" y="123" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" fill="currentColor">Proton ARM64 + FEX — Valve's, fetched by Steam as a normal download</text>
+
+        <rect x="48" y="152" width="604" height="40" rx="5" stroke-width="1.6" style="fill:var(--lane-valve-tint);stroke:var(--lane-valve)"></rect>
+        <text x="350" y="177" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" fill="currentColor">Steam for ARM Linux — Valve's client, fetched from Valve on first run</text>
+
+        <rect x="48" y="206" width="604" height="40" rx="5" stroke-width="1.6" style="fill:var(--lane-valve-tint);stroke:var(--lane-valve)"></rect>
+        <text x="350" y="225" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13" fill="currentColor">gamescope + Xwayland — Valve's game compositor</text>
+        <text x="350" y="239" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.75">the same thing that runs a Steam Deck's game session</text>
+
+        <text x="350" y="264" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.7">all of the above lives in a 790 MB Linux system the app downloads once</text>
+
+        <!-- proot layer -->
+        <rect x="24" y="286" width="652" height="46" rx="6" stroke-width="2" style="fill:var(--lane-linux-tint);stroke:var(--lane-linux)"></rect>
+        <text x="350" y="306" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13.5" font-weight="700" fill="currentColor">proot — builds that fake root without any root access</text>
+        <text x="350" y="322" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.8">watches every file request and rewrites the path; no kernel privileges involved</text>
+
+        <!-- app layer -->
+        <rect x="24" y="346" width="652" height="66" rx="6" stroke-width="2" style="fill:var(--accent-tint);stroke:var(--accent)"></rect>
+        <text x="350" y="366" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13.5" font-weight="700" fill="currentColor">The Android app — an ordinary sideloaded APK</text>
+        <text x="163" y="388" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" opacity="0.85">Wayland compositor</text>
+        <text x="350" y="388" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" opacity="0.85">PulseAudio on AAudio</text>
+        <text x="537" y="388" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" opacity="0.85">synthetic Xbox pad</text>
+        <text x="350" y="404" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" opacity="0.65">the three things a Linux program expects the system to provide</text>
+
+        <g stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)" opacity="0.55">
+          <line x1="350" y1="286" x2="350" y2="250"></line>
+          <line x1="350" y1="346" x2="350" y2="336"></line>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Nothing here is privileged. <code>proot</code> is a normal program that watches the programs
+    inside it and rewrites their file paths on the fly, so a folder in the app's private storage convincingly
+    answers to <code>/usr</code>. The app supplies a screen, sound and a gamepad from the outside.</figcaption>
+  </figure>
+
+  <h3>The walls, and what each one cost</h3>
+  <p>Every one of these was a dead stop at some point, and the answers are the actual engineering in this
+  project.</p>
+
+  <div class="walls">
+    <div class="wall">
+      <div class="no"><p class="t">The wall</p><p>An app is not allowed to run programs out of its own storage — modern Android forbids it outright.</p></div>
+      <div class="yes"><p class="t">The answer</p><p>Declare the app against an older Android rulebook (<code>targetSdk 28</code>), where it still is. That is also why this can never be on the Play Store.</p></div>
+    </div>
+    <div class="wall">
+      <div class="no"><p class="t">The wall</p><p>A Linux system expects to <em>be</em> the filesystem — <code>/usr</code>, <code>/etc</code>, <code>/home</code>. Mounting one needs root.</p></div>
+      <div class="yes"><p class="t">The answer</p><p><code>proot</code>, which fakes it from the outside by rewriting paths. We build our own copy so nothing about it is a mystery when it breaks.</p></div>
+    </div>
+    <div class="wall">
+      <div class="no"><p class="t">The wall</p><p>Steam normally wraps every game in its own sandbox first. That needs a kernel feature Android denies apps, and Steam silently gave up — no window, no error, nothing.</p></div>
+      <div class="yes"><p class="t">The answer</p><p>Re-register Valve's own Proton as a compatibility tool of our own, with that one requirement removed — every file symlinked, so Steam still updates the real thing.</p></div>
+    </div>
+    <div class="wall">
+      <div class="no"><p class="t">The wall</p><p>Steam looks for gamepads the way a desktop does, through a system service that does not exist here. It retried hundreds of times a second until it crashed.</p></div>
+      <div class="yes"><p class="t">The answer</p><p>Max's stand-in: a plain socket that answers where that service would be. Your real controller is then re-published as a synthetic Xbox 360 pad, the one identity Steam always has a mapping for.</p></div>
+    </div>
+    <div class="wall">
+      <div class="no"><p class="t">The wall</p><p>No sound server, and Linux audio cannot talk to Android audio.</p></div>
+      <div class="yes"><p class="t">The answer</p><p>A PulseAudio server run by the app on top of Android's own audio path — Winlator's original trick — plus DirectAudio, which now carries the microphone too. Steam voice chat works.</p></div>
+    </div>
+    <div class="wall">
+      <div class="no"><p class="t">The wall</p><p>Linux graphics expect a GPU device node that Android's Adreno driver does not present.</p></div>
+      <div class="yes"><p class="t">The answer</p><p>A Turnip driver built to speak to Qualcomm's own interface instead. Games get the real GPU; only the Linux desktop's own compositing falls back to the CPU.</p></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <p class="lab">Why it took two people</p>
+    <p><strong>Max (maxjivi05)</strong> got the Linux side standing up in WinNative: the <code>proot</code>
+    session, gamescope, the shims that answer what the sandbox refuses, and the controller work — including
+    the fixes that stopped Steam crashing a minute or two into every session.</p>
+    <p><strong>The412Banner</strong> built the Android side it presents through: the Wayland compositor inside
+    the app, the frame-generation engines, the runtime packaging and downloads, the audio with microphone
+    support, and the Bannerlator and standalone apps around it.</p>
+  </div>
+
+  <h2 id="wayland">Wayland, and how a frame gets to your screen</h2>
+  <p class="kicker">"Wayland" is the word doing the most work in the announcement, so here is what it means.</p>
+
+  <p>On Linux, programs do not draw straight to the screen. They hand finished pictures to a
+  <strong>display server</strong>, which decides where each window goes. The old one is <strong>X11</strong>,
+  from the 1980s; the modern replacement is <strong>Wayland</strong>, which is simpler and much better suited
+  to one program handing over one finished frame at a time — exactly our situation.</p>
+
+  <p>So the app contains a Wayland display server of its own. Linux programs connect to it as if it were a
+  normal desktop. It takes their frames, and hands them to Android's compositor, which puts them on the panel.
+  Nothing else on the phone is involved.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 740 200" role="img" aria-label="A left to right flow: the game renders through Vulkan and Turnip, gamescope composites the Steam interface and the game, our Wayland compositor receives the buffer and a fence, optional frame generation inserts extra frames, Android's SurfaceFlinger composites it, and the panel shows it.">
+        <defs>
+          <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+
+        <rect x="12" y="56" width="128" height="58" rx="5" stroke="currentColor" stroke-width="1.2" style="fill:var(--surface-2)"></rect>
+        <text x="76" y="80" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12.5" font-weight="700" fill="currentColor">The game</text>
+        <text x="76" y="97" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.75">Vulkan → Turnip → GPU</text>
+
+        <rect x="176" y="56" width="128" height="58" rx="5" stroke-width="1.6" style="fill:var(--lane-valve-tint);stroke:var(--lane-valve)"></rect>
+        <text x="240" y="80" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12.5" font-weight="700" fill="currentColor">gamescope</text>
+        <text x="240" y="97" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.75">Steam UI + game</text>
+
+        <rect x="340" y="56" width="140" height="58" rx="5" stroke-width="2" style="fill:var(--accent-tint);stroke:var(--accent)"></rect>
+        <text x="410" y="80" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12.5" font-weight="700" fill="currentColor">Our compositor</text>
+        <text x="410" y="97" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.75">in the app, on Vulkan</text>
+
+        <rect x="516" y="56" width="120" height="58" rx="5" stroke="currentColor" stroke-width="1.2" style="fill:var(--surface-2)"></rect>
+        <text x="576" y="80" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12.5" font-weight="700" fill="currentColor">Android</text>
+        <text x="576" y="97" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.75">SurfaceFlinger</text>
+
+        <rect x="672" y="56" width="56" height="58" rx="5" stroke="currentColor" stroke-width="1.2" style="fill:var(--surface-2)"></rect>
+        <text x="700" y="90" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12.5" font-weight="700" fill="currentColor">Panel</text>
+
+        <g stroke="currentColor" stroke-width="1.3" marker-end="url(#ar3)" opacity="0.6">
+          <line x1="140" y1="85" x2="174" y2="85"></line>
+          <line x1="304" y1="85" x2="338" y2="85"></line>
+          <line x1="480" y1="85" x2="514" y2="85"></line>
+          <line x1="636" y1="85" x2="670" y2="85"></line>
+        </g>
+        <text x="157" y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="currentColor" opacity="0.7">frame</text>
+        <text x="321" y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="currentColor" opacity="0.7">buffer + fence</text>
+        <text x="497" y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="currentColor" opacity="0.7">surface</text>
+
+        <!-- frame gen callout -->
+        <rect x="336" y="140" width="148" height="44" rx="5" fill="none" stroke-width="1.6" stroke-dasharray="6 4" style="stroke:var(--lane-win)"></rect>
+        <text x="410" y="158" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" style="fill:var(--lane-win)">Frame generation</text>
+        <text x="410" y="173" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.8">extra frames inserted here</text>
+        <line x1="410" y1="138" x2="410" y2="116" stroke-width="1.4" marker-end="url(#ar3)" style="stroke:var(--lane-win)"></line>
+      </svg>
+    </div>
+    <figcaption>Because the extra frames are made in our compositor — after gamescope, on the finished
+    picture — frame generation works for any game without changing anything inside the Linux system. Measured
+    on a handheld: 30 → 61, 60 → 118 and 61 → 123 fps.</figcaption>
+  </figure>
+
+  <h3>Why a driver can't cross the line</h3>
+  <p>Programs need a small library to talk to the operating system, and Android and Linux use different ones
+  — Android's is called <strong>bionic</strong>, desktop Linux uses <strong>glibc</strong>. Same language,
+  different dialect: a driver built for one cannot load in the other, even on the same phone, for the same GPU.
+  That is why Bannerlator's Contents screen has three separate driver slots, and why putting a file in the
+  wrong one is refused rather than quietly broken:</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr><th>Slot</th><th>Which world it serves</th><th>What goes in it</th><th>On the test device</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>GPU Drivers</strong></td><td>Android apps and app-side Wine games</td><td>An Adrenotools zip (<code>vulkan.adXXXX.so</code>)</td><td class="num">Turnip 26.3.0-r4 · Vulkan 1.4.359</td></tr>
+        <tr><td><strong>Wayland game drivers</strong></td><td>Games under the Wayland display backend</td><td>A <code>libvulkan_freedreno*.so</code> built for Wayland</td><td class="num">Turnip 26.3.0-7cda785 · Vulkan 1.4.362</td></tr>
+        <tr><td><strong>Linux runtime drivers</strong></td><td>The Steam client and every game it launches</td><td>A “-Linux” Turnip zip, built against glibc</td><td class="num">Turnip 26.3.0-20260921 · Vulkan 1.4.363</td></tr>
+      </tbody>
+      <caption>Three builds of the same Mesa Turnip driver, for the same Adreno GPU, that cannot be swapped for one another.</caption>
+    </table>
+  </div>
+
+  <h2 id="apps">Three ways to get it</h2>
+  <p class="kicker">Same runtime underneath. The difference is how much else comes with it.</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr><th>App</th><th>What it is</th><th>Pick it if</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Bannerlator</strong></td>
+          <td>The full app: containers, app-side Wine, its own Steam, Epic, GOG and Amazon stores — with the Linux runtime as an optional download that leaves a permanent “Steam (Linux)” entry in your Games tab.</td>
+          <td>You already use it, or you want both roads on one device and per-game control over everything.</td>
+        </tr>
+        <tr>
+          <td><strong>WinNative</strong></td>
+          <td>Max's app, where the gamescope runtime was born and where its controller and session work is developed.</td>
+          <td>You follow that project, or you want the Linux work closest to its source.</td>
+        </tr>
+        <tr>
+          <td><strong>The standalone app <span class="tag warn">0.1</span></strong></td>
+          <td>One screen, one button: install the runtime, press Play, Big Picture. Plus an optional Linux desktop — LXQt, Firefox and a shelf of console emulators — in the same session.</td>
+          <td>You only want Steam, or you want a Linux desktop on your phone and nothing else.</td>
+        </tr>
+      </tbody>
+      <caption>All three are sideloaded. The standalone app's runtime image is the same one Bannerlator installs, so a device with both can share one download.</caption>
+    </table>
+  </div>
+
+  <p>Rough cost either way: about <strong>790 MB</strong> for the Linux system, once, before any games. The
+  desktop and emulator packages are roughly another <strong>1.1 GB</strong> if you want them. You need an
+  <strong>ARM64 Android 9+ device with an Adreno GPU</strong> — Mali, Xclipse and PowerVR are not supported
+  by this path.</p>
+
+  <h2 id="ledger">What actually works today</h2>
+  <p class="kicker">An honest ledger, not a feature list. Most of this has been proven on one or two devices.</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr><th>Thing</th><th>State</th><th>Evidence</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Signing in, the store, installing, launching</td><td><span class="tag ok">Proven</span></td><td>End to end on device; Proton ARM64 fetched by Steam itself</td></tr>
+        <tr><td>Windows games from the client</td><td><span class="tag ok">Proven</span></td><td class="num">Half-Life 2 79 fps · FlatOut 144 Hz · NFS Most Wanted 48 fps · GTA V Legacy 32 fps · Portal 2 · Brawlhalla · TF2</td></tr>
+        <tr><td>Frame generation (LSFG 2×)</td><td><span class="tag ok">Proven</span></td><td class="num">30 → 61 · 60 → 118 · 61 → 123 fps</td></tr>
+        <tr><td>Sound, and the microphone</td><td><span class="tag ok">Proven</span></td><td>Voice confirmed in Steam's own voice tester while a game ran</td></tr>
+        <tr><td>Controllers, and on-screen controls without one</td><td><span class="tag ok">Proven</span></td><td>Re-published as an Xbox 360 pad; Steam shows Xbox glyphs</td></tr>
+        <tr><td>Other Protons (GE-Proton, proton-cachyos)</td><td><span class="tag ok">Proven</span></td><td>Installed as catalog downloads and selected per game in Bannerlator</td></tr>
+        <tr><td>Linux desktop, browser, file manager</td><td><span class="tag ok">Proven</span></td><td>Firefox browsing live pages at 93 fps</td></tr>
+        <tr><td>Folding the phone mid-session; backgrounding</td><td><span class="tag ok">Proven</span></td><td>Session survives both; wake locks hold a download</td></tr>
+        <tr><td>The console emulators on the desktop</td><td><span class="tag warn">Untested</span></td><td>They build, publish and install — none has been run with a game</td></tr>
+        <tr><td>Starting Steam with no internet; soft keyboard</td><td><span class="tag warn">Untested</span></td><td>Built, not yet exercised on device</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>What doesn't work, and why</h3>
+  <ul class="plain">
+    <li><strong>VAC-protected games report “insecure”.</strong> Team Fortress 2 runs and plays, but Valve's
+    anti-cheat does not arm. Everything around it is correct — logged in, tracked by Steam, no errors — and
+    the cause sits in the game's own start-up, before logging begins. The gap is the sandbox layer Android
+    denies us, the same one that had to be removed to launch anything at all. <em>This will be fixed by
+    closing that gap or not at all: nothing here is, or will be, an attempt to hide from anti-cheat.</em>
+    Games not gated on VAC are online and fine, and BattlEye did not block GTA V.</li>
+    <li><strong>Games with only a Linux version don't run.</strong> Old Valve titles like the original
+    Half-Life install a Linux build made for x86 PCs, and that needs the same missing sandbox. The
+    workaround is to tell Steam to install the Windows version instead, which then takes the proven road.</li>
+    <li><strong>The Linux desktop composites on the CPU.</strong> Programs on it still use the GPU
+    themselves; it is the desktop's own window-shuffling that runs in software, because the compositor it
+    uses insists on a GPU device node Android doesn't hand out.</li>
+    <li><strong>Firefox's internal sandboxes are switched off</strong> in that desktop — they cannot be set
+    up inside <code>proot</code>, and its tabs crash otherwise. Treat browsing there as less protected than
+    on a real desktop.</li>
+    <li><strong>No Switch emulator</strong>, and there won't be one: the project's repository was taken down
+    in February, so there is nothing to build from.</li>
+  </ul>
+
+  <h2 id="faq">Questions people are already asking</h2>
+
+  <div class="faq">
+    <details>
+      <summary>Do I need root?</summary>
+      <p>No. That is the headline. Root only saves you a download, by letting you copy an existing runtime
+      between apps instead of fetching it again.</p>
+    </details>
+    <details>
+      <summary>Is this an emulator?</summary>
+      <p>Partly, and the distinction matters. The Steam client itself is <em>not</em> emulated — it is ARM
+      code running on an ARM chip at full speed. Only the Windows games need translation, because they are
+      x86 programs: Proton answers their Windows requests, FEX converts their x86 instructions, and DXVK
+      converts their DirectX calls to Vulkan.</p>
+    </details>
+    <details>
+      <summary>So will my whole Steam library just work?</summary>
+      <p>No — treat it as “some of it, sometimes, and you should expect to fiddle.” A modern phone is
+      running a translated x86 game on a mobile GPU; heavy titles are heavy, anti-cheat is a wall, and
+      version 0.1 means 0.1. The proven list above is the honest picture.</p>
+    </details>
+    <details>
+      <summary>Is any of Valve's software being copied or cracked?</summary>
+      <p>None of it. The Steam client is downloaded from Valve's own servers on your device the first time
+      you press Play, and Proton arrives as an ordinary Steam download. Nothing of Valve's is redistributed,
+      and none of this is affiliated with or endorsed by Valve.</p>
+    </details>
+    <details>
+      <summary>Does this replace flashing ArmadaOS or Rocknix?</summary>
+      <p>For the Steam-on-a-handheld part, yes — that was the point. No unlocked bootloader, no wiped
+      device, no dual boot. You install an APK.</p>
+    </details>
+    <details>
+      <summary>Why is it not on the Play Store?</summary>
+      <p>It cannot be. Running programs out of the app's own storage requires declaring the app against an
+      older Android rulebook, and Play requires a recent one. Sideloading is the only route, by design.</p>
+    </details>
+    <details>
+      <summary>My phone has a Mali GPU. Can I use it?</summary>
+      <p>Not on this path yet. The compositor loads a Turnip driver, which is for Qualcomm Adreno. Support
+      for other GPUs is a separate piece of work.</p>
+    </details>
+    <details>
+      <summary>Something didn't start. Where do I look?</summary>
+      <p>Each session writes its own log file to your <code>Download</code> folder — in the standalone app,
+      under <code>SteamDeck/</code>. That log is the first thing to read, and the first thing to attach when
+      you report a problem.</p>
+    </details>
+  </div>
+
+  <footer>
+    <p><strong>Who built what.</strong> <strong>maxjivi05 (Max)</strong> — the gamescope runtime this all
+    stands on: the proot session, the session shims, the fake-input interposer and the controller work, from
+    WinNative. <strong>The412Banner</strong> — the Wayland compositor, the frame-generation engines, the
+    runtime packaging and plumbing, the audio and microphone path, and the Bannerlator and standalone apps.</p>
+    <p><strong>Standing on.</strong> Winlator (brunodev85) — the audio stack, the gamepad model and the shape
+    of a session all descend from it; WinNative and Bannerlator are both Winlator lineage. gamescope, Proton,
+    FEX, DXVK, VKD3D, Mesa Turnip, proot, labwc and LXQt are their authors' work. GPL-3.0.</p>
+    <p><strong>Not affiliated with Valve Corporation.</strong> Steam, Proton, Steam Deck and gamescope are
+    Valve's. No Valve software is redistributed here.</p>
+  </footer>
+
+</div>
+</body>
+</html>
