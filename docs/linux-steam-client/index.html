@@ -513,8 +513,9 @@
     session, gamescope, the shims that answer what the sandbox refuses, and the controller work — including
     the fixes that stopped Steam crashing a minute or two into every session.</p>
     <p><strong>The412Banner</strong> built the Android side it presents through: the Wayland compositor inside
-    the app, the frame-generation engines, the runtime packaging and downloads, the audio with microphone
-    support, and the Bannerlator and standalone apps around it.</p>
+    the app, the wiring that lets frame generation run on gamescope's finished output — plus <strong>Win-FG</strong>,
+    the one frame-generation engine here written from scratch — the runtime packaging and downloads, the audio
+    with microphone support, and the Bannerlator and standalone apps around it.</p>
   </div>
 
   <h2 id="wayland">Wayland, and how a frame gets to your screen</h2>
@@ -574,10 +575,29 @@
         <line x1="410" y1="138" x2="410" y2="116" stroke-width="1.4" marker-end="url(#ar3)" style="stroke:var(--lane-win)"></line>
       </svg>
     </div>
-    <figcaption>Because the extra frames are made in our compositor — after gamescope, on the finished
-    picture — frame generation works for any game without changing anything inside the Linux system. Measured
-    on a handheld: 30 → 61, 60 → 118 and 61 → 123 fps.</figcaption>
+    <figcaption>What is ours here is the <em>placement</em>: the extra frames are inserted in our
+    compositor, after gamescope, on the already-finished picture — which is why it works for any game with
+    nothing changed inside the Linux system. Who wrote the engine doing the inserting is a separate question,
+    answered directly below. Measured on a handheld: 30 → 61, 60 → 118 and 61 → 123 fps.</figcaption>
   </figure>
+
+  <h3>Who actually made the frame generation</h3>
+  <p><strong>We did not invent frame generation, and most of what runs here is not ours.</strong> It is worth
+  being exact about this, because it is easy to read “frame generation in our compositor” as a bigger claim
+  than it is.</p>
+  <ul class="plain">
+    <li><strong>LSFG is Lossless Scaling's work.</strong> The shaders come out of <em>your own copy</em> of
+    Lossless Scaling — the app you bought — read from the Steam library at runtime and never redistributed.
+    The groundwork for running that chain on Vulkan outside Windows is <strong>lsfg-vk (PancakeTAS)</strong>,
+    with the Android port that followed it. <strong>Our part is the wiring</strong>: making it run inside the
+    compositor on gamescope's output, finding your <code>Lossless.dll</code> in the Steam library for you, and
+    the switches that turn it on mid-game.</li>
+    <li><strong>Win-FG is the one engine built here from scratch.</strong> Clean-room optical-flow frame
+    synthesis — no proprietary shaders, no purchased DLL, no borrowed model weights — which is exactly why it
+    can be built in and needs nothing from you.</li>
+  </ul>
+  <p>So: one engine ours, one engine someone else's that we made work in a place it had never run, and the
+  pacing and placement in between. Nothing else about frame generation on this page is a claim of authorship.</p>
 
   <h3>Why a driver can't cross the line</h3>
   <p>Programs need a small library to talk to the operating system, and Android and Linux use different ones
@@ -645,7 +665,7 @@
       <tbody>
         <tr><td>Signing in, the store, installing, launching</td><td><span class="tag ok">Proven</span></td><td>End to end on device; Proton ARM64 fetched by Steam itself</td></tr>
         <tr><td>Windows games from the client</td><td><span class="tag ok">Proven</span></td><td class="num">Half-Life 2 79 fps · FlatOut 144 Hz · NFS Most Wanted 48 fps · GTA V Legacy 32 fps · Portal 2 · Brawlhalla · TF2</td></tr>
-        <tr><td>Frame generation (LSFG 2×)</td><td><span class="tag ok">Proven</span></td><td class="num">30 → 61 · 60 → 118 · 61 → 123 fps</td></tr>
+        <tr><td>Frame generation — LSFG 2× wired into our compositor</td><td><span class="tag ok">Proven</span></td><td class="num">30 → 61 · 60 → 118 · 61 → 123 fps</td></tr>
         <tr><td>Sound, and the microphone</td><td><span class="tag ok">Proven</span></td><td>Voice confirmed in Steam's own voice tester while a game ran</td></tr>
         <tr><td>Controllers, and on-screen controls without one</td><td><span class="tag ok">Proven</span></td><td>Re-published as an Xbox 360 pad; Steam shows Xbox glyphs</td></tr>
         <tr><td>Other Protons (GE-Proton, proton-cachyos)</td><td><span class="tag ok">Proven</span></td><td>Installed as catalog downloads and selected per game in Bannerlator</td></tr>
@@ -731,11 +751,15 @@
   <footer>
     <p><strong>Who built what.</strong> <strong>maxjivi05 (Max)</strong> — the gamescope runtime this all
     stands on: the proot session, the session shims, the fake-input interposer and the controller work, from
-    WinNative. <strong>The412Banner</strong> — the Wayland compositor, the frame-generation engines, the
-    runtime packaging and plumbing, the audio and microphone path, and the Bannerlator and standalone apps.</p>
+    WinNative. <strong>The412Banner</strong> — the Wayland compositor, <strong>Win-FG</strong> (the one
+    frame-generation engine built here from scratch) and the wiring that runs frame generation on gamescope's
+    output, the runtime packaging and plumbing, the audio and microphone path, and the Bannerlator and
+    standalone apps.</p>
     <p><strong>Standing on.</strong> Winlator (brunodev85) — the audio stack, the gamepad model and the shape
-    of a session all descend from it; WinNative and Bannerlator are both Winlator lineage. gamescope, Proton,
-    FEX, DXVK, VKD3D, Mesa Turnip, proot, labwc and LXQt are their authors' work. GPL-3.0.</p>
+    of a session all descend from it; WinNative and Bannerlator are both Winlator lineage. <strong>Lossless Scaling</strong> — the shader chain LSFG uses, read from
+    your own purchased copy and never redistributed — and <strong>lsfg-vk (PancakeTAS)</strong>, which got that
+    chain running on Vulkan outside Windows in the first place. gamescope, Proton, FEX, DXVK, VKD3D, Mesa
+    Turnip, proot, labwc and LXQt are their authors' work. GPL-3.0.</p>
     <p><strong>Not affiliated with Valve Corporation.</strong> Steam, Proton, Steam Deck and gamescope are
     Valve's. No Valve software is redistributed here.</p>
   </footer>
