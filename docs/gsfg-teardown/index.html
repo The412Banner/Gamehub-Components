@@ -325,7 +325,7 @@
         <li><strong>Shaders:</strong> 54 GPU programs: two complete frame-gen sets (Performance and Quality) plus 3 texture decoders. Compiled with Google's glslc, debug names stripped.</li>
         <li><strong>Baked-in numbers:</strong> ≈28.9k fp16 constants inside the shaders (≈30.6k counting every weight slot).</li>
         <li><strong>Controls:</strong> a 9-byte control file written by the app: on/off, flow scale 0.2–1.0, model 0/1, multiplier 2–4.</li>
-        <li><strong>Where it came from (our August 2026 finding):</strong> the <em>design</em> is derived from LSFG. It uses stage names that only lsfg-vk invented (<code>delta0–9</code>, <code>gamma0–4</code>, <code>generate</code>) and matches LSFG's shader wiring (12 of 13 layouts). It is not a byte copy (different compiler, 0% shared bytes), and its weights are its own, because LSFG has no learned weights to copy.</li>
+        <li><strong>Where it came from (our August 2026 finding):</strong> the <em>design</em> is derived from LSFG. It uses stage names that only lsfg-vk invented (<code>delta0–9</code>, <code>gamma0–4</code>, <code>generate</code>) and matches LSFG's shader wiring (12 of 13 layouts). It is not a byte copy (different compiler, 0% shared bytes), and, as first reported, its weights looked like its own. <strong>Correction (2026-09-29):</strong> that was an extraction bug. LSFG does hold ~29.8k trained weights, and 44 of this engine's 45 weight-bearing shaders match an LSFG 3.1 resource exactly after fp16 rounding, 97.6% of its weights. See the <a href="../gsfg-11-teardown/#provenance">GSFG 1.1 teardown</a>.</li>
       </ul>
       <div class="tbl">
         <table>
@@ -463,7 +463,7 @@
             <tr><th>LSFG's shader wiring</th><td class="hi">12 of 13 layouts · 37 / 54 shaders · the rare 12-in/2-out and five 4-in/4-out shapes</td><td class="gd">2 / 65 and 2 / 53, generic shapes only</td></tr>
             <tr><th>Pass structure</th><td class="hi">LSFG's own stages and 7 sizes</td><td class="gd">9-level learned encoder and search, 2 frames, no stage maps one-to-one</td></tr>
             <tr><th>Byte overlap with Lossless.dll</th><td>noise</td><td>noise (≤ 0.01%)</td></tr>
-            <tr><th>Weights</th><td>its own; LSFG has none</td><td class="gd">its own; 0 matching runs vs the old engine</td></tr>
+            <tr><th>Weights</th><td class="hi">LSFG 3.1's own, fp16-rounded (44 of 45 weight shaders; corrected 2026-09-29)</td><td class="gd">its own; 0 matching runs vs the old engine</td></tr>
             <tr><th>Toolchain</th><td>Google glslc, stripped</td><td>glslangValidator, GLSL 450, debug names kept</td></tr>
           </tbody>
         </table>
@@ -471,7 +471,7 @@
       <div class="chips">
         <span class="chip okc"><b>Byte or shader copy:</b> no · high confidence</span>
         <span class="chip okc"><b>Design derived from LSFG:</b> no evidence · medium-high</span>
-        <span class="chip okc"><b>Weights copied:</b> no · high confidence</span>
+        <span class="chip okc"><b>GSFG weights copied:</b> no · high confidence</span>
       </div>
       <p class="note">What's still in common (coarse-to-fine motion, warping by time, blending two warped frames) is shared by all modern frame interpolation. Binaries can't show whether GameHub trained GSFG to imitate LSFG's output or took ideas from reading lsfg-vk. The host code still comes from the same <code>/Users/me/Documents/GameScopeVK</code> source tree, with a new <code>gsfg_interpolator</code> namespace.</p>
     </section>
@@ -541,7 +541,8 @@
 
   <footer>
     <span>GameHub Frame Gen Teardown</span>
-    <span>Prepared 2026-09-11</span>
+    <span>Prepared 2026-09-11 · corrected 2026-09-29</span>
+    <span>Newer: <a href="../gsfg-11-teardown/">GSFG 1.1 Teardown</a></span>
     <span>Static analysis of upstream firmware · not device-tested</span>
   </footer>
 </div>

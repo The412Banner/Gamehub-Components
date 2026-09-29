@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GSFG 1.1 Teardown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: single reading column like a lab notebook, wide tables scroll in place; a sticky section index on wide screens. */
+:root{
+  --bg:#f5f6f4; --panel:#ffffff; --ink:#1b2320; --muted:#5a6661; --rule:#d9ded9;
+  --accent:#0e6b5c; --accent-soft:#e1efeb; --warn:#9a5b00; --warn-soft:#f7ecd9; --bad:#a3312b; --bad-soft:#f6e1df; --good:#246b2e; --good-soft:#e2f0e2;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121715; --panel:#1a211e; --ink:#e3e9e5; --muted:#9aa7a1; --rule:#2d3733;
+  --accent:#5cc6ae; --accent-soft:#193a32; --warn:#e2a54a; --warn-soft:#3a2c14; --bad:#ec8a82; --bad-soft:#3d1f1c; --good:#7fcf8a; --good-soft:#1c3520; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121715; --panel:#1a211e; --ink:#e3e9e5; --muted:#9aa7a1; --rule:#2d3733;
+  --accent:#5cc6ae; --accent-soft:#193a32; --warn:#e2a54a; --warn-soft:#3a2c14; --bad:#ec8a82; --bad-soft:#3d1f1c; --good:#7fcf8a; --good-soft:#1c3520; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body);padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)} nav.toc{display:none}}
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;padding-top:40px;font-size:13px}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 0;border-left:2px solid var(--rule);padding-left:12px}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent);border-color:var(--accent)}
+main{min-width:0;max-width:820px}
+header{padding-block:48px 24px;border-bottom:1px solid var(--rule)}
+.kicker{font:600 12px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(34px,6vw,52px)/1.05 var(--f-display);margin:.35em 0 .3em;text-wrap:balance;letter-spacing:-.01em}
+h2{font:700 26px/1.2 var(--f-display);margin:0 0 .6em;text-wrap:balance}
+h3{font:600 18px/1.3 var(--f-display);margin:1.6em 0 .5em}
+p{margin:0 0 1em;max-width:68ch}
+.lede{font-size:18px;color:var(--muted);max-width:62ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;font:13px var(--f-mono);color:var(--muted);margin-top:16px}
+section{padding-block:44px 8px;border-bottom:1px solid var(--rule)}
+code,.mono{font-family:var(--f-mono);font-size:.86em}
+code{background:var(--accent-soft);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+a{color:var(--accent)}
+.verdict{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--good);padding:20px 22px;margin:28px 0 8px;border-radius:4px}
+.verdict strong{font-family:var(--f-display);font-size:19px;display:block;margin-bottom:6px}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:24px 0}
+@media (max-width:640px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.facts div{background:var(--panel);padding:14px 16px}
+.facts b{display:block;font:700 26px/1.1 var(--f-display);font-variant-numeric:tabular-nums}
+.facts span{font-size:13px;color:var(--muted)}
+.tbl{overflow-x:auto;margin:16px 0 20px;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:600 12px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--bg);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;white-space:nowrap}
+.pill{display:inline-block;font:600 11px/1 var(--f-mono);padding:4px 7px;border-radius:99px;white-space:nowrap;letter-spacing:.03em}
+.p-good{background:var(--good-soft);color:var(--good)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-acc{background:var(--accent-soft);color:var(--accent)}
+.note{background:var(--warn-soft);border-left:3px solid var(--warn);padding:12px 16px;margin:16px 0;border-radius:3px;font-size:15px}
+.note p:last-child{margin:0}
+pre.block{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:14px 16px;overflow-x:auto;font:13px/1.55 var(--f-mono);margin:12px 0 20px}
+pre.mermaid{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:12px;overflow-x:auto;margin:12px 0 20px}
+ul,ol{padding-left:1.3em;max-width:68ch} li{margin:.25em 0}
+.legend{font-size:13px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:640px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:16px 18px;min-width:0}
+.card h3{margin-top:0}
+footer{padding-top:32px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="toc" aria-label="Sections">
+  <a href="#verdict">Verdict</a>
+  <a href="#where">Where it lives</a>
+  <a href="#network">The network</a>
+  <a href="#versions">1.4.8 → 1.4.9 → 1.1</a>
+  <a href="#engine">Host engine</a>
+  <a href="#provenance">Provenance</a>
+  <a href="#public">What XiaoJi says</a>
+  <a href="#open">Open questions</a>
+  <a href="#files">Method</a>
+</nav>
+<main>
+<header>
+  <div class="kicker">GameHub firmware 1.5.1 · imagefs vc 41 · libGameScopeV2.so</div>
+  <h1>GSFG 1.1 Teardown</h1>
+  <p class="lede">What GameHub's new frame-generation model is, how it is built, and whether it came from LSFG or another community project, recovered from the shipped binary.</p>
+  <div class="meta"><span>2026-09-29</span><span>static analysis, not device-tested</span><span>lib sha256 79c16959…</span><span>BuildID 8417bc93…</span></div>
+</header>
+
+<section id="verdict">
+  <h2>Verdict</h2>
+  <div class="verdict">
+    <strong>XiaoJi trained this model themselves. It is not LSFG, and it is not taken from any public project.</strong>
+    GSFG 1.1 is a small learned optical-flow interpolator, about 10.1k parameters, with fp16 weights compiled into 36 Vulkan compute shaders. It was checked against LSFG 3.1, lsfg-vk, the old GameScopeVK engine, RIFE, IFRNet, FSR 3, RAFT and 30+ other models. It matched none of them in weights, kernel names or descriptor layouts. It is a from-scratch retrain by the same team and codebase that made GSFG 1.0.
+  </div>
+  <div class="facts">
+    <div><b>~10.1k</b><span>trained parameters</span></div>
+    <div><b>~0.37 G</b><span>MACs per frame pair at 720p</span></div>
+    <div><b>36</b><span>model kernels, all new</span></div>
+    <div><b>up to 6×</b><span>adaptive multiplier</span></div>
+  </div>
+  <p>This is the opposite of the pre-1.4.8 engine. The same test shows that GameScopeVK carried LSFG 3.1's actual trained weights: 44 of its 45 weight-bearing shaders matched one LSFG resource value for value. GSFG 1.1 matches nothing.</p>
+  <div class="note"><p>What byte-level analysis cannot rule out: a model <em>trained to imitate</em> another engine's output leaves no trace in its weights. XiaoJi's own benchmark data has a per-clip <code>lsfg_check</code> field, so LSFG 2.0 was in their evaluation pipeline. Nothing shows it was used as a training target.</p></div>
+</section>
+
+<section id="where">
+  <h2>Where it lives</h2>
+  <p>Firmware 1.5.1 is newer than 2.0.0. GameHub orders firmware by versionCode, and 1.5.1 is vc 41 against 2.0.0's vc 40. Its <code>sp_winemu_unified_resources.xml</code> row is <code>IMAGE_FS:id:1</code>, md5 <code>bb2ab51f…</code>, state INSTALLED. Every file in the tree was hashed, and only one file changed.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>File</th><th>1.4.9 (vc 39)</th><th>2.0.0 (vc 40)</th><th>1.5.1 (vc 41)</th></tr></thead>
+    <tbody>
+      <tr><td><code>usr/lib/libGameScopeV2.so</code></td><td>2,001,072 B (GSFG 1.0)</td><td>identical to 1.4.9</td><td><b>1,673,504 B (GSFG 1.1)</b></td></tr>
+      <tr><td><code>usr/lib/libGameScopeVK.so</code> (old LSFG-lineage engine)</td><td>missing</td><td>restored</td><td><span class="pill p-bad">missing again</span></td></tr>
+      <tr><td>everything else (≈7,800 entries)</td><td>—</td><td>identical</td><td>identical</td></tr>
+    </tbody>
+  </table></div>
+  <p>The model is entirely inside <code>libGameScopeV2.so</code>. There is no separate weights file. A table in <code>.data.rel.ro</code> at <code>0x192be8</code> lists 36 entries of <code>{name, SPIR-V pointer, size}</code>. Those are the model kernels m00–m35. Three more unnamed modules (m36–m38) are BCn texture decoders, byte-identical to 1.4.9. The 1.4.9 tensor and pass tables are gone: the host now builds the graph in hand-written code.</p>
+</section>
+
+<section id="network">
+  <h2>The network</h2>
+  <p>It is still an optical-flow interpolator with a cost volume, now much leaner. The design is closest to a compact PWC-Net / RAFT hybrid: flow is refined coarse to fine, and at each level the features are matched in a small window around the current estimate. Flow is bidirectional and anchored at the in-between time <i>t</i>, like RIFE. A learned 4-way selector plus a hand-built photometric rule then blends four warped candidates.</p>
+<pre class="mermaid">
+flowchart TD
+  A["prev + next frames"] --> B["fast_downscale → motion res<br/>fast_pyramid3 → RGB pyramid"]
+  B --> C["hb_features<br/>4×4 patchify → dw3×3 → pw · 12 ch @ ¼"]
+  C --> U["UI branch 'stable'<br/>hb_stable_pre → dwmix → tail → fast_ui_mask"]
+  P["previous pair's flow<br/>fast_prior_img → pool_small → fast_pack"] --> D1
+  C --> D1["COARSE · 5×5 window<br/>hc16_update_unit → update_pre → dwmix → tail"]
+  D1 --> D2["PRIMARY · 3×3 window → flow A"]
+  C --> D3["LOCAL · 3×3 window, starts at zero → flow B"]
+  U -. "zero motion on HUD" .-> D1 & D2 & D3
+  D2 --> E["BLEND<br/>hc8_blend_unit → blend_pre → dwmix → tail<br/>4 logits over A→prev, A→next, B→prev, B→next"]
+  D3 --> E
+  E --> F["hy_synth_guide → preview frame"]
+  F --> G["hy_synth_evidence @ ¼<br/>joint-bilateral flow upsample + photometric evidence"]
+  G --> H["hy_synth_final @ full res<br/>softmax × temporal × border weights → frame(t)"]
+</pre>
+  <p class="legend">Order within each level is proven from bindings. Level resolutions and the A/B pairing are inferred, and match XiaoJi's own description (a coarse-to-fine main branch, plus a small-motion branch that starts from zero).</p>
+
+  <h3>What each kernel family does</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Family</th><th>Kernels</th><th>Role</th><th class="num">Params</th></tr></thead>
+    <tbody>
+      <tr><td>Encoder</td><td><code>hb_features</code></td><td>4×4 stride-4 conv 3→8, depthwise 3×3, pointwise 8→12. The whole encoder, reused per pyramid level.</td><td class="num">580</td></tr>
+      <tr><td>UI detector</td><td><code>hb_stable_pre</code>, <code>hb_dwmix_stable</code>, <code>hb_tail_stable</code>, <code>fast_ui_mask</code>, <code>fast_mask_pyramid</code></td><td>Learned static-HUD mask from three frames. Head bias −5.4 (a strong "not UI" prior). The mask is dilated, thresholded, and forces flow to zero.</td><td class="num">1,697</td></tr>
+      <tr><td>Flow levels ×3</td><td><code>hc{8,16}_update_unit</code>, <code>hc*_update_pre_{coarse,primary,local}</code>, <code>hb_dwmix_*</code>, <code>hb_tail_*</code></td><td>Cosine correlation in a 5×5 / 3×3 / 3×3 window, then a soft-argmax with learned temperatures (138.9 / 81.1 / 95.3). A gated residual head updates the flow symmetrically: <code>xy += δ, zw −= δ</code>.</td><td class="num">5,975</td></tr>
+      <tr><td>Blend selector</td><td><code>hc8_blend_unit</code>, <code>hc8_blend_pre</code>, <code>hb_dwmix_blend</code>, <code>hb_tail_blend</code></td><td>36 two-way consistency correlations, UI mask and level state in; 4 candidate logits out.</td><td class="num">1,780</td></tr>
+      <tr><td>Hybrid synthesis</td><td><code>hy_synth_{guide,evidence,final,final_u8}</code></td><td>A 22→4 learned correction, plus a hand-built colour-mismatch penalty, a (1−t, t) temporal prior, border validity and joint-bilateral flow upsampling.</td><td class="num">92</td></tr>
+      <tr><td>Utilities</td><td><code>fast_*</code>, <code>pool_small*</code>, <code>fast3_resize_flow</code>, <code>fast_prior_img</code></td><td>Resizes, pyramids, PyTorch-style adaptive pooling, layout packing, and the warm-start prior. No weights.</td><td class="num">0</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>How it is built</h3>
+  <ul>
+    <li><b>Every learned block has the same shape:</b> a 1×1 fusion layer, then depthwise 5×5 + pointwise, then depthwise 5×5 + (I+W) pointwise, then tiny heads. That is MobileNet/ConvNeXt style. The residual skip is folded into the second pointwise matrix: its diagonal sits at 0.96–1.18.</li>
+    <li><b>Activation:</b> a leaky clamp to [0,1] with slope 0.01. Hidden tensors are stored as RGBA8, so the stored copy loses the leak.</li>
+    <li><b>Precision:</b> all network maths is fp16 <code>f16vec4</code>. Softmax, warps and final synthesis run in fp32.</li>
+    <li><b>hc8 / hc16 are one model at two storage precisions.</b> Their weights are byte-identical, and a host flag picks 8-bit or 16-bit correlation keys. The <code>_decoded</code> variant reproduces the 8-bit round trip exactly. So 8-bit quantisation was part of training.</li>
+    <li><b>Trained in PyTorch, then hand-exported.</b> Pooling follows <code>adaptive_avg_pool2d</code> semantics and resampling is <code>align_corners=False</code>. Tensors use NCHW layouts. Each layer was then written out as GLSL with its constants baked in, and compiled with shaderc and stripped: 0 debug names, against 345 in 1.4.9.</li>
+    <li><b>Not a hypernetwork.</b> Every weight is a compile-time constant, and there are no weight buffers anywhere.</li>
+  </ul>
+</section>
+
+<section id="versions">
+  <h2>1.4.8 → 1.4.9 → 1.1</h2>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>1.4.8</th><th>1.4.9 (GSFG 1.0)</th><th>1.5.1 (GSFG 1.1)</th></tr></thead>
+    <tbody>
+      <tr><td>Parameters</td><td class="num">~43.6k</td><td class="num">~14.4k</td><td class="num"><b>~10.1k</b></td></tr>
+      <tr><td>MACs / pair @ 720p</td><td class="num">~0.73 G</td><td class="num">~0.35 G</td><td class="num"><b>~0.37 G</b></td></tr>
+      <tr><td>Shader modules</td><td class="num">65</td><td class="num">53</td><td class="num">39</td></tr>
+      <tr><td>Weight storage</td><td>packed fp16 UBO</td><td>fp32 UBO</td><td>fp16 constants inside SPIR-V</td></tr>
+      <tr><td>Flow search</td><td>9-level global cost volume</td><td>9-level global, 7×7 volumes, shared weights</td><td>3 levels, 5×5 / 3×3 local windows, separate weights per level</td></tr>
+      <tr><td>HUD / UI handling</td><td>none</td><td>none</td><td><span class="pill p-good">learned mask</span></td></tr>
+      <tr><td>Startup</td><td>—</td><td>per-launch auto-tune, pipeline cache</td><td>both removed; warm-up run instead</td></tr>
+      <tr><td>Multiplier</td><td>2× only</td><td>2–4× (engine clamp 2–6)</td><td>fixed 2×–4×, or adaptive up to 6×</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Likely quality</b> (a structural judgement, not measured on a device): it should be better on HUD smearing, occlusions and motion edges. The risk is large, fast motion. The ±2 search window at the coarse level replaces 1.4.9's global search, which reached down to 1/512 resolution, and the new encoder is a single 580-parameter stage.</p>
+</section>
+
+<section id="engine">
+  <h2>Host engine</h2>
+  <p>It is still the same Vulkan ICD shim: it exports only the three <code>vk_icd*</code> symbols, loads the real driver, and presents through DRI3 pixmaps and <code>xcb_present_pixmap</code>. There is no JNI and no new environment variable. The app drives it through an 11-byte memory-mapped control file at <code>$GAMESCOPE_CONTROL_PATH</code>.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Bytes</th><th>Field</th><th>Change vs 1.4.9</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">0–1</td><td>source FPS limit (u16)</td><td>same</td></tr>
+      <tr><td class="mono">2</td><td>enable</td><td>same</td></tr>
+      <tr><td class="mono">3–6</td><td>flow scale (f32) → motion resolution 20–100 %</td><td>now a direct mapping; the "legacy model" remap is gone</td></tr>
+      <tr><td class="mono">7</td><td>(no longer read)</td><td>dropped</td></tr>
+      <tr><td class="mono">8</td><td>multiplier; 0 = adaptive</td><td>adaptive mode is new</td></tr>
+      <tr><td class="mono">9–10</td><td>target FPS (u16)</td><td><span class="pill p-acc">new</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Adaptive multiplier</h3>
+      <p>It starts at 1× and aims for ⌈target ÷ source⌉, capped at 6×.</p>
+      <ul>
+        <li><b>Steps up:</b> after two measurement windows (≥ 8 batches and ≥ 750 ms each) where GPU work is under 16.25 % of the source frame time and present wait is ≤ 10 %.</li>
+        <li><b>Steps down:</b> above 21.25 %, or when the game's own frame rate drops more than 15 %.</li>
+        <li><b>Backoff:</b> 2, 4, 8, 16, then 30 s.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Dispatches per real frame</h3>
+      <div class="tbl" style="margin:0"><table>
+        <tbody>
+          <tr><td>Fixed 2×</td><td class="num">64</td></tr>
+          <tr><td>Fixed 3×</td><td class="num">85</td></tr>
+          <tr><td>Fixed 4×</td><td class="num">106</td></tr>
+          <tr><td>Adaptive</td><td class="num">17 + 47 per frame</td></tr>
+          <tr><td>Warm-up</td><td class="num">10</td></tr>
+        </tbody>
+      </table></div>
+      <p style="margin-top:10px">Adaptive mode re-runs the flow network for every generated frame, because its timestamps fall unevenly.</p>
+    </div>
+  </div>
+
+  <h3>Requirements and silent-off conditions</h3>
+  <ul>
+    <li><code>shaderFloat16</code> and <code>VK_KHR_push_descriptor</code> are both mandatory, with no descriptor-set fallback. Without them, backend creation fails and frames pass straight through.</li>
+    <li>If X11 Present IdleNotify can't be registered (it now tries a second xcb connection first), frame generation stays off.</li>
+    <li>The per-user ICD JSON still points at <code>libGameScopeVK.so</code>, which 1.5.1 no longer ships.</li>
+    <li>The Adreno 840 (vendor <code>0x5143</code> with "840" in the name) gets a special 16-bit "decoded" kernel variant.</li>
+  </ul>
+  
+
+  <h3>Build fingerprints</h3>
+  <p>The toolchain matches 1.4.8, 1.4.9 and the old VK engine: NDK r27 with clang 18.0.1, libc++ <code>ndk1</code>, fmt v11 and log tag <code>gamescope</code>. The source tree is <code>/Users/me/Documents/GameScopeVK/gamescope/*.cpp</code>. C++ types include <code>gsfg_interpolator::FrameInterpolator</code> and <code>gamescope::FPSCounterWithCallback</code>. The only version string is "GSFG 1.1".</p>
+</section>
+
+<section id="provenance">
+  <h2>Provenance</h2>
+  <p>Four independent checks were run: identifier and string fingerprints, descriptor-layout signatures, SPIR-V structure, and weight matching. The weight matching compared exact fp16 runs, ±1-ulp runs, sign-flipped and scale-invariant runs, cross-correlation, and an order-free per-module containment test. Each test was calibrated on two known cases first. The old engine against LSFG was the positive control: the order-free test caught it at 100 % (12 of 19 tables). GSFG 1.4.9 was the negative control.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Candidate source</th><th>Result</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>LSFG 3.1 (<code>Lossless.dll</code>) / lsfg-vk</td><td>0 of 17 lsfg-vk stage names; 3 of 13 generic layouts shared, no rare ones; weights at chance</td><td><span class="pill p-good">not derived</span></td></tr>
+      <tr><td>Old GameScopeVK (≤ 1.4.2)</td><td>The only shared runs are the standard sRGB constants</td><td><span class="pill p-good">not derived</span></td></tr>
+      <tr><td>GSFG 1.0 (1.4.8 / 1.4.9)</td><td>Same codebase and vendor. The model was retrained from scratch, and design ideas carried over: 4-candidate blend, continuous t, "evidence"</td><td><span class="pill p-acc">same lineage</span></td></tr>
+      <tr><td>RIFE v1–v4.26 incl. lite, IFRNet ×6, DAIN, CAIN, UPR-Net ×3, AMT-S, RAFT ×5</td><td>0 exact, sign or scale runs across 44 references. Best order-free score +0.088, the same as the negative control's +0.095</td><td><span class="pill p-good">not derived</span></td></tr>
+      <tr><td>AMD FSR 3 frame interpolation + optical flow</td><td>FSR 3 has no learned weights; its pass types and names differ</td><td><span class="pill p-good">not derived</span></td></tr>
+      <tr><td>ncnn / MNN runtimes</td><td>Those use weight buffers and specialization constants. GSFG bakes fused constants</td><td><span class="pill p-good">not generated by them</span></td></tr>
+      <tr><td>FILM, EMA-VFI, XVFI</td><td>Architecture comparison only; weights not fetched</td><td><span class="pill p-warn">not derived (medium-high)</span></td></tr>
+      
+      <tr><td>Closed engines (Qualcomm AFME, MediaTek, OEM, HarmonyOS)</td><td>No public binaries to compare; no identifier appears in public code</td><td><span class="pill p-warn">untestable</span></td></tr>
+    </tbody>
+  </table></div>
+  <p>A GitHub code search for the distinctive names (<code>hb_dwmix</code>, <code>hy_synth</code>, <code>hc16_update_pre</code>, <code>fast_ui_mask</code>, <code>gsfg_interpolator</code>) found no public code. The only hits were generic words such as "pyramid".</p>
+  <div class="note"><p><b>A correction to the August record.</b> Our <a href="../gsfg-teardown/">September 11 teardown</a> said LSFG has "zero learned weights". That was a parsing mistake: DXVK's DXBC translator stores the constants as integers, and the old extractor skipped them. Decoded properly, <code>Lossless.dll</code> holds about 29.8k trained weights. 44 of the old GameScopeVK's 45 weight-bearing shaders match an LSFG resource exactly after fp16 rounding, covering 97.6 % of its weights. So the old engine carried LSFG 3.1's real trained weights, not only its design. <a href="../gsfg-teardown/#lsfg">The earlier teardown</a> has been corrected.</p></div>
+</section>
+
+<section id="public">
+  <h2>What XiaoJi says</h2>
+  <p>XiaoJi launched an official page on 2026-09-29 (Last-Modified 14:09 GMT): <a href="https://gamehub.xiaoji.com/en/gsfg/" target="_blank" rel="noopener">gamehub.xiaoji.com/en/gsfg</a>. It is linked from the GameHub homepage as "AI Frame Gen". It confirms the teardown in their own words:</p>
+  <ul>
+    <li><b>GSFG = "GameSir Frame Gen".</b> GameSir is XiaoJi's own brand.</li>
+    <li>"The model also reads a history frame and uses three consecutive frames to find UI regions that stay still…" This is the learned UI branch.</li>
+    <li>"The motion estimated for the previous pair of inputs is kept and reused for the next pair." This is the warm-start prior.</li>
+    <li>"…a second branch estimates small motion from zero" is the local branch. "A fusion network weights the two candidates" is the blend selector. "A first-pass image guides the upsampling" is <code>hy_synth_guide</code>.</li>
+    <li>"…network weights baked into the shaders in half precision."</li>
+    <li>Continuous <i>t</i>: 2×, 3×, 4×, 6× and fractional ratios (1.5×, 2.5×) from one model. Claimed cost on an Adreno 840 at 720p with 60 % motion resolution: 1.39 ms per frame; 6× costs 4.05 ms.</li>
+  </ul>
+  <h3>Their benchmark, from the data built into the page</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Clip set</th><th class="num">GSFG 1.1</th><th class="num">GSFG 1.0</th><th class="num">LSFG 2.0</th><th class="num">Frame blend</th></tr></thead>
+    <tbody>
+      <tr><td>validation (6 · Borderlands 4, Hitman 3)</td><td class="num">30.95</td><td class="num">30.41</td><td class="num">29.95</td><td class="num">28.18</td></tr>
+      <tr><td>test (4 · Gears 5)</td><td class="num">30.53</td><td class="num">29.63</td><td class="num">29.68</td><td class="num">26.48</td></tr>
+      <tr><td>probe (12 · YouTube footage)</td><td class="num">25.28</td><td class="num">24.62</td><td class="num">24.99</td><td class="num">23.85</td></tr>
+      <tr><td><b>all 22 clips</b></td><td class="num"><b>27.78</b></td><td class="num">27.11</td><td class="num">27.19</td><td class="num">25.51</td></tr>
+    </tbody>
+  </table></div>
+  <p class="legend">Figures are PSNR in dB, where higher is better. By their own numbers, GSFG 1.0 lost to LSFG 2.0 on 8 of 9 games. GSFG 1.1 is ahead by +0.59 dB overall and +0.29 dB on the held-out YouTube clips. The baseline is LSFG 2.0, not current LSFG 3.x.</p>
+  <p><b>Not stated anywhere public:</b> who trained it, the training data, any partner or open-source base, any licence or LSFG statement, and device requirements. The story that "the LSFG dev asked GameHub to take the old engine down" exists only as Reddit hearsay from 2026-09-12. GSFG 1.0 was widely panned on Reddit and Bilibili. There are no public reactions to 1.1 yet.</p>
+</section>
+
+<section id="open">
+  <h2>Open questions</h2>
+  <ul>
+    <li>How it actually looks and performs in games. Nothing here was run on a device. It needs side-by-side testing in real games.</li>
+    <li>Exact level resolutions, and whether the coarse level repeats over several octaves.</li>
+    <li>Which three feature maps feed the UI branch.</li>
+    <li>The rule that picks hc8 or hc16, and the default thresholds for the UI mask and synthesis.</li>
+    <li>What the app writes into the target-FPS and multiplier bytes, and whether it offers 6× in its UI.</li>
+  </ul>
+</section>
+
+<section id="files">
+  <h2>Method and evidence</h2>
+  <ul>
+    <li><b>Source:</b> GameHub firmware 1.5.1 (<code>imagefs.zst</code>, md5 <code>bb2ab51f154238f339a5a607bde499ba</code>, 201,321,903 B), compared file by file with 1.4.9 and 2.0.0.</li>
+    <li><b>Shaders:</b> all 39 SPIR-V modules carved from <code>libGameScopeV2.so</code>, decompiled with spirv-cross, and weight uses counted per kernel.</li>
+    <li><b>Host code:</b> arm64 disassembly of the dispatch builder, control-file reader, adaptive planner and present path.</li>
+    <li><b>Provenance:</b> identifier search, descriptor-layout signatures, SPIR-V structure, and fp16 weight matching against 44+ public references, including LSFG 3.1 decoded from <code>Lossless.dll</code>, lsfg-vk, FidelityFX SDK, rife-ncnn-vulkan (nihui and TNTwise), Practical-RIFE, IFRNet, DAIN, CAIN, UPR-Net, AMT, RAFT, FILM, EMA-VFI, ncnn, MNN and Snapdragon GSR.</li>
+    <li><b>Public claims:</b> XiaoJi's GSFG 1.1 page as served on 2026-09-29, with its embedded benchmark data.</li>
+  </ul>
+</section>
+
+<footer>Static reverse-engineering of a shipped binary, for interoperability and documentation. Prepared 2026-09-29. Previous version: <a href="../gsfg-teardown/">GameHub Frame Gen Teardown (1.4.2 → 1.4.9)</a>.</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true,theme:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"neutral")});</script>
+</div>
+
+</body>
+</html>
